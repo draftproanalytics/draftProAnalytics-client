@@ -69,7 +69,10 @@ onMounted(() => {
 
         <button
           class="refresh-btn"
-          :disabled="loading"
+          :disabled="loading || controller.isAllPreseasonSelected.value"
+          :title="controller.isAllPreseasonSelected.value
+            ? 'Refresh-by-week is unavailable when all preseason games are selected'
+            : undefined"
           @click="controller.runImportScoresWeek"
         >
           Refresh

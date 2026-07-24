@@ -19,6 +19,9 @@ export function useUpcomingGamesController() {
   const selectedYear = ref(2025)
   const selectedSeasonType = ref(2)
   const selectedWeek = ref(0)
+  const isAllPreseasonSelected = computed(
+    () => selectedSeasonType.value === 1 && selectedWeek.value === 0
+  )
 
   // Week options based on season type
   const weekOptions = computed<number[]>(() => {
@@ -154,6 +157,15 @@ export function useUpcomingGamesController() {
   // SUBMIT = REFRESH Scores By Week
   // ---------------------------------------------
   async function runImportScoresWeek() {
+    if (isAllPreseasonSelected.value) {
+      toast.add({
+        severity: 'info',
+        summary: 'Select a preseason week',
+        detail: 'The Preseason option displays all preseason games and cannot run a single-week score import.',
+      })
+      return
+    }
+
     loading.value = true
     const raw = selectedSeasonType.value
 
@@ -246,6 +258,7 @@ export function useUpcomingGamesController() {
     selectedSeasonType,
     selectedWeek,
     weekOptions,
+    isAllPreseasonSelected,
 
     lastUpdated,
     refreshProgress,
