@@ -3,6 +3,7 @@ import type { ApiResponse } from '@/types'
 
 export interface PostSeasonTeamSummary {
   id: number
+  gameId?: number
   name: string
   city?: string
   state?: string

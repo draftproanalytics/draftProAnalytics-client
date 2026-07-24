@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import { useThemeStore } from '@/stores/theme.store'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
+import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue'
 
 interface Props {
   teamId?: number 
@@ -17,11 +17,6 @@ const props = defineProps<Props>()
 
 const gameStore = useGameStore()
 const themeStore = useThemeStore()
-
-// Lazy-load GameReadOnly to avoid upfront bundle cost
-const GameReadOnly = defineAsyncComponent(() =>
-  import('@/components/game/GameReadOnly.vue')
-)
 
 // Filters
 const seasonYear = ref<number>(props.initialSeasonYear || new Date().getFullYear())
@@ -74,9 +69,14 @@ const onAccordionExpand = async () => {
   }
 }
 
-const viewGame = (id: number) => {
+const viewGame = (id: number): void => {
   selectedGameId.value = id
   dialogVisible.value = true
+}
+
+const onGameRowClick = (event: { data: { id?: unknown } }): void => {
+  const id = Number(event.data.id)
+  if (Number.isInteger(id) && id > 0) viewGame(id)
 }
 
 const getTeamShortNameAndLogo = (team: any): { shortName: string; logoPath: string } => {
@@ -138,7 +138,8 @@ onMounted(() => {
         responsiveLayout="scroll"
         dataKey="id"
         showGridlines
-        class="themed-datatable"
+        class="themed-datatable clickable-rows"
+        @row-click="onGameRowClick"
       >
         <Column header="Week" sortField="gameWeek">
           <template #body="{ data }">
@@ -207,27 +208,23 @@ onMounted(() => {
               icon="pi pi-eye"
               class="p-button-info p-button-sm"
               v-tooltip="'View Game'"
-              @click="viewGame(data.id)"
+              @click.stop="viewGame(data.id)"
             />
           </template>
         </Column>
       </DataTable>
     </div>
 
-    <Dialog
+    <PlayoffGameDetailsDialog
       v-model:visible="dialogVisible"
-      modal
-      header="Game Details"
-      :style="{ width: '65vw' }"
-      :breakpoints="{ '1199px': '85vw', '575px': '95vw' }"
-    >
-      <GameReadOnly v-if="selectedGameId" :id="selectedGameId" mode="read" />
-    </Dialog>
+      :game-id="selectedGameId"
+    />
   </div>
 </template>
 
 <style scoped>
 .schedule-section { display:flex; flex-direction:column; gap:1rem; }
+:deep(.clickable-rows .p-datatable-tbody > tr) { cursor:pointer; }
 .filters {
   display:flex;
   align-items:flex-end;

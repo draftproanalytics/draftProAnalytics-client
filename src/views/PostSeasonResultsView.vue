@@ -7,6 +7,7 @@ import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
+import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue'
 
 import {
   postSeasonResultService,
@@ -25,6 +26,9 @@ const resultFilter = ref<'W' | 'L' | null>(null)
 const page = ref(1)
 const pageSize = ref(25)
 const totalRecords = ref(0)
+const selectedGameId = ref<number | null>(null)
+const selectedGameTitle = ref<string | null>(null)
+const gameDetailsVisible = ref(false)
 
 const resultOptions = [
   { label: 'All results', value: null },
@@ -93,6 +97,14 @@ function getPostSeasonTeamLogo(
         }
       : undefined,
   )
+}
+
+
+function openGameDetails(row: PostSeasonResultRow): void {
+  if (!row.gameId) return
+  selectedGameId.value = row.gameId
+  selectedGameTitle.value = `${row.team?.name ?? `Team ${row.teamId ?? '—'}`} — ${row.playoffRound ?? row.lastRoundReached ?? 'Postseason'}`
+  gameDetailsVisible.value = true
 }
 
 onMounted(loadResults)
@@ -169,6 +181,8 @@ onMounted(loadResults)
       striped-rows
       responsive-layout="scroll"
       data-key="id"
+      :row-class="(row: PostSeasonResultRow) => row.gameId ? 'game-details-row' : ''"
+      @row-click="openGameDetails($event.data)"
       @page="handlePage"
     >
       <template #empty>
@@ -212,11 +226,34 @@ onMounted(loadResults)
           {{ data.scoreDifferential ?? '—' }}
         </template>
       </Column>
+      <Column header="Details" style="width: 7rem">
+        <template #body="{ data }">
+          <Button
+            icon="pi pi-eye"
+            severity="info"
+            text
+            rounded
+            aria-label="View game details"
+            :disabled="!data.gameId"
+            @click.stop="openGameDetails(data)"
+          />
+        </template>
+      </Column>
     </DataTable>
+
+    <PlayoffGameDetailsDialog
+      v-model:visible="gameDetailsVisible"
+      :game-id="selectedGameId"
+      :fallback-title="selectedGameTitle"
+    />
   </section>
 </template>
 
 <style scoped>
+:deep(.game-details-row) {
+  cursor: pointer;
+}
+
 .post-season-results-page {
   display: flex;
   flex-direction: column;

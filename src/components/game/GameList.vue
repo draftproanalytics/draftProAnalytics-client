@@ -9,11 +9,11 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import { FilterMatchMode } from 'primevue/api'
 import GameCreateForm from '@/components/game/GameCreateForm.vue'
-import GameEditForm from '@/components/game/GameEditForm.vue'
 import { useThemeStore } from '@/stores/theme.store'
 import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
 import { useAuthStore } from '@/modules/auth/application/authStore'
 import { formatScheduleWeekLabel, type ScheduleWeekValue } from '@/util/scheduleWeekLabel'
+import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue'
 
 
 const auth = useAuthStore();
@@ -28,9 +28,13 @@ const seasonYear = ref<number>(new Date().getFullYear())
 // Server pagination state (PrimeVue uses 0-based paging; server is 1-based)
 const rows = ref(10)
 const first = ref(0)
+const sortField = ref<'gameWeek' | 'gameDate'>('gameWeek')
+const sortOrder = ref<1 | -1>(1)
 
-// Modal
+// Dialog state
 const showCreateModal = ref(false)
+const showGameDetailsDialog = ref(false)
+const selectedGameId = ref<number | null>(null)
 
 // Filters (PrimeVue UI filters; server still governs the data size)
 const filters = ref({
@@ -41,13 +45,21 @@ const filters = ref({
 
 onMounted(async () => {
   await themeStore.loadTeams() // Ensure teams are loaded
-  await gameStore.fetchAll(1, rows.value, { year: seasonYear.value }) // first load
+  await gameStore.fetchAll(1, rows.value, {
+    year: seasonYear.value,
+    sortField: sortField.value,
+    sortOrder: sortOrder.value,
+  }) // first load
 })
 
 // When the year changes, reload page 1
 watch(seasonYear, async (y) => {
   first.value = 0
-  await gameStore.fetchAll(1, rows.value, { year: y })
+  await gameStore.fetchAll(1, rows.value, {
+    year: y,
+    sortField: sortField.value,
+    sortOrder: sortOrder.value,
+  })
 })
 
 // PrimeVue page event (server-side)
@@ -56,10 +68,43 @@ const onPage = async (event: any) => {
   const limit = event.rows
   first.value = event.first
   rows.value = limit
-  await gameStore.fetchAll(page, limit, { year: seasonYear.value })
+  await gameStore.fetchAll(page, limit, {
+    year: seasonYear.value,
+    sortField: sortField.value,
+    sortOrder: sortOrder.value,
+  })
 }
 
-const viewGame = (id: number) => router.push(`/games/${id}?mode=read`)
+
+type GameSortEvent = {
+  sortField?: string | ((item: unknown) => string)
+  sortOrder?: 1 | -1 | 0 | null
+}
+
+const onSort = async (event: GameSortEvent): Promise<void> => {
+  const requestedField = typeof event.sortField === 'string' ? event.sortField : undefined
+  if (requestedField !== 'gameWeek' && requestedField !== 'gameDate') return
+
+  sortField.value = requestedField
+  sortOrder.value = event.sortOrder === -1 ? -1 : 1
+  first.value = 0
+
+  await gameStore.fetchAll(1, rows.value, {
+    year: seasonYear.value,
+    sortField: sortField.value,
+    sortOrder: sortOrder.value,
+  })
+}
+
+const viewGame = (id: number): void => {
+  selectedGameId.value = id
+  showGameDetailsDialog.value = true
+}
+
+const onGameRowClick = (event: { data: { id?: unknown } }): void => {
+  const id = Number(event.data.id)
+  if (Number.isInteger(id) && id > 0) viewGame(id)
+}
 const editGame = (id: number) => router.push(`/games/${id}?mode=edit`)
 const createGame = () => { showCreateModal.value = true }
 
@@ -68,14 +113,22 @@ const deleteGame = async (id: number) => {
   await gameStore.remove(id)
   // reload current page
   const page = Math.floor(first.value / rows.value) + 1
-  await gameStore.fetchAll(page, rows.value, { year: seasonYear.value })
+  await gameStore.fetchAll(page, rows.value, {
+    year: seasonYear.value,
+    sortField: sortField.value,
+    sortOrder: sortOrder.value,
+  })
 }
 
 const onGameCreated = async () => {
   showCreateModal.value = false
   // reload current page
   const page = Math.floor(first.value / rows.value) + 1
-  await gameStore.fetchAll(page, rows.value, { year: seasonYear.value })
+  await gameStore.fetchAll(page, rows.value, {
+    year: seasonYear.value,
+    sortField: sortField.value,
+    sortOrder: sortOrder.value,
+  })
 }
 
 // Helpers
@@ -147,9 +200,10 @@ const getStatusClass = (status: string | undefined) => {
     <DataTable :value="gameStore.games" :loading="gameStore.loading" dataKey="id" :lazy="true" paginator :rows="rows"
       :first="first" :totalRecords="gameStore.pagination?.total || 0" :rowsPerPageOptions="[10, 20, 50, 100]"
       @page="onPage" responsiveLayout="scroll" sortMode="single"
+      :sortField="sortField" :sortOrder="sortOrder" @sort="onSort"
       :globalFilterFields="['seasonYear', 'homeTeam.name', 'awayTeam.name', 'gameLocation']" filterDisplay="menu"
-      :filters="filters" showGridlines class="themed-datatable">
-      <Column field="seasonYear" header="Season" sortable />
+      :filters="filters" showGridlines class="themed-datatable clickable-rows" @row-click="onGameRowClick">
+      <Column field="seasonYear" header="Season" />
       <Column header="Week" sortable sortField="gameWeek">
         <template #body="{ data }">
           <div class="week-badge bg-team-secondary text-team-accent px-2 py-1 rounded text-sm font-medium">
@@ -213,10 +267,10 @@ const getStatusClass = (status: string | undefined) => {
       <Column header="Actions">
         <template #body="{ data }">
           <div class="action-buttons">
-            <Button @click="viewGame(data.id)" icon="pi pi-eye" class="p-button-info p-button-sm" v-tooltip="'View'" />
-            <Button @click="editGame(data.id)" icon="pi pi-pencil" class="p-button-warning p-button-sm"
+            <Button @click.stop="viewGame(data.id)" icon="pi pi-eye" class="p-button-info p-button-sm" v-tooltip="'View'" />
+            <Button @click.stop="editGame(data.id)" icon="pi pi-pencil" class="p-button-warning p-button-sm"
               v-tooltip="'Edit'" :disabled="auth.role === 1" severity="secondary" />
-            <Button @click="deleteGame(data.id)" icon="pi pi-trash" class="p-button-danger p-button-sm"
+            <Button @click.stop="deleteGame(data.id)" icon="pi pi-trash" class="p-button-danger p-button-sm"
               v-tooltip="'Delete'" />
           </div>
         </template>
@@ -227,12 +281,21 @@ const getStatusClass = (status: string | undefined) => {
       :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
       <GameCreateForm @game-created="onGameCreated" @cancel="() => (showCreateModal = false)" />
     </Dialog>
+
+    <PlayoffGameDetailsDialog
+      v-model:visible="showGameDetailsDialog"
+      :game-id="selectedGameId"
+    />
   </div>
 </template>
 
 <style scoped>
 .team-list {
   width: 100%;
+}
+
+:deep(.clickable-rows .p-datatable-tbody > tr) {
+  cursor: pointer;
 }
 
 .list-header {
