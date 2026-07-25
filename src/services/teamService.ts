@@ -2,16 +2,29 @@
 import { apiService } from './api'
 import type { Team, PaginatedResponse, ApiResponse } from '@/types'
 
+type TeamSortField = 'name' | 'city' | 'state' | 'conference' | 'division' | 'stadium'
+
 export class TeamService {
   private readonly endpoint = '/teams'
 
-  async getAll(page = 1, limit = 10): Promise<PaginatedResponse<Team>> {
+  async getAll(
+    page = 1,
+    limit = 10,
+    sortField: TeamSortField = 'name',
+    sortOrder: 1 | -1 = 1,
+  ): Promise<PaginatedResponse<Team>> {
  
     const pageNum = Number(page)
     const limitNum = Number(limit)
     
     // Build URL manually to avoid axios params encoding issues
-    const url = `${this.endpoint}?page=${pageNum}&limit=${limitNum}`
+    const params = new URLSearchParams({
+      page: String(pageNum),
+      limit: String(limitNum),
+      sortField,
+      sortOrder: String(sortOrder),
+    })
+    const url = `${this.endpoint}?${params.toString()}`
   
     try {
       const response = await apiService.get<ApiResponse<Team[], any>>(url)

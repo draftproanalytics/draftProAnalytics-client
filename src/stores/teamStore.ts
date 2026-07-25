@@ -4,6 +4,8 @@ import { ref, computed } from 'vue'
 import { teamService } from '@/services/teamService'
 import type { Team, CrudMode, PaginationMeta } from '@/types'
 
+type TeamSortField = 'name' | 'city' | 'state' | 'conference' | 'division' | 'stadium'
+
 export const useTeamStore = defineStore('team', () => {
   // State - in memory only, fetched from server
   const teams = ref<Team[]>([])
@@ -27,7 +29,13 @@ export const useTeamStore = defineStore('team', () => {
   })
 
   // Actions - All data from REST API
-  const fetchAll = async (page = 1, limit = 10, refresh = false) => {
+  const fetchAll = async (
+    page = 1,
+    limit = 10,
+    refresh = false,
+    sortField: TeamSortField = 'name',
+    sortOrder: 1 | -1 = 1,
+  ) => {
     // Ensure parameters are numbers
     const pageNum = Number(page)
     const limitNum = Number(limit)
@@ -38,7 +46,7 @@ export const useTeamStore = defineStore('team', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await teamService.getAll(pageNum, limitNum)
+      const response = await teamService.getAll(pageNum, limitNum, sortField, sortOrder)
       console.log('Teams service response:', response)
       console.log('Response pagination:', response.pagination)
       

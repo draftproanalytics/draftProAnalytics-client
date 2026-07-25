@@ -67,21 +67,13 @@ watch(
 
 <template>
   <div class="team-detail-view-expanded">
-    <!-- ✅ Add a small action bar when a team is selected -->
-    <div v-if="teamId" class="team-actions">
-      <Button
-        label="Team Needs"
-        icon="pi pi-list-check"
-        size="small"
-        @click="goToTeamNeeds"
-      />
-    </div>
+    
 
-    <!-- Show list when no ID -->
-    <TeamList v-if="!teamId" />
+    <!-- Create mode must be checked before the no-ID list condition. -->
+    <TeamCreateForm v-if="mode === 'create'" />
 
-    <!-- Show create form -->
-    <TeamCreateForm v-else-if="mode === 'create'" />
+    <!-- Show list when no ID and not creating. -->
+    <TeamList v-else-if="!teamId" />
 
     <!-- Show edit form -->
     <TeamEditForm v-else-if="mode === 'edit'" />

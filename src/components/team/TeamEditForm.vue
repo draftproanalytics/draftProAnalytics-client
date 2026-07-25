@@ -11,6 +11,7 @@ import { useToast } from 'primevue/usetoast'
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
+import { getTeamLogoInfo, type TeamLogoInfo, type TeamRef } from '@/util/teamLogo'
 
 
 const themeStore = useThemeStore()
@@ -73,13 +74,8 @@ watch(
   },
   { immediate: true }
 )
-const getTeamLogo = (team: any): string => {
-  if (!team || !team.name || !team.conference) return ''
-
-  const lastWord = team.name.trim().split(/\s+/).pop() || ''
-  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
-
-  return `/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`
+const getTeamLogo = (selectedTeam: TeamRef | null | undefined): TeamLogoInfo => {
+  return getTeamLogoInfo(selectedTeam)
 }
 onMounted(async () => {
   // Apply theme based on route parameter if present
@@ -123,7 +119,12 @@ const onCancel = () => {
     <template #subtitle v-if="team">
       <div class="info-row">
         <h3 class="team-name-with-logo">
-          <img :src="getTeamLogo(team)" :alt="team.name" class="inline-logo" />
+          <img
+            v-if="getTeamLogo(team).logoUrl"
+            :src="getTeamLogo(team).logoUrl"
+            alt=""
+            class="inline-logo"
+          />
           {{ team.name }}
         </h3>
       </div>

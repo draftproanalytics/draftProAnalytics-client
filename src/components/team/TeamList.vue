@@ -6,6 +6,7 @@ import { useTeamStore } from '@/stores/teamStore'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
+import { getTeamLogoInfo, type TeamLogoInfo, type TeamRef } from '@/util/teamLogo'
 
 const teamStore = useTeamStore()
 const router = useRouter()
@@ -13,6 +14,20 @@ const router = useRouter()
 // Pagination state - match what DataTable expects (0-based for PrimeVue)
 const currentPage = ref(0) // PrimeVue uses 0-based indexing
 const rowsPerPage = ref(10)
+const sortField = ref<TeamSortField>('name')
+const sortOrder = ref<1 | -1>(1)
+
+type TeamSortField = 'name' | 'city' | 'state' | 'conference' | 'division' | 'stadium'
+
+interface TeamPageEvent {
+  page: number
+  rows: number
+}
+
+interface TeamSortEvent {
+  sortField?: string | ((item: unknown) => string)
+  sortOrder?: number | null
+}
 
 // Computed for total records using correct backend field names
 const totalRecords = computed(() => {
@@ -24,7 +39,7 @@ const backendPage = computed(() => currentPage.value + 1)
 
 onMounted(() => {
   console.log('Component mounted, fetching initial data')
-  teamStore.fetchAll(backendPage.value, rowsPerPage.value)
+  teamStore.fetchAll(backendPage.value, rowsPerPage.value, false, sortField.value, sortOrder.value)
 })
 
 // Watch for pagination changes from the backend to sync UI (page only, not rows)
@@ -39,7 +54,7 @@ watch(() => teamStore.pagination?.page, (newPage) => {
   }
 })
 
-const onPageChange = (event: any) => {
+const onPageChange = (event: TeamPageEvent) => {
   console.log('Page change event:', event)
   console.log('Event details - page:', event.page, 'rows:', event.rows)
   
@@ -54,7 +69,27 @@ const onPageChange = (event: any) => {
   console.log('Local state after update - currentPage:', currentPage.value, 'rowsPerPage:', rowsPerPage.value)
   
   // Fetch new data from backend
-  teamStore.fetchAll(backendPageNum, event.rows, true)
+  teamStore.fetchAll(backendPageNum, event.rows, true, sortField.value, sortOrder.value)
+}
+
+const onSortChange = (event: TeamSortEvent) => {
+  const requestedField = typeof event.sortField === 'string' ? event.sortField : 'name'
+  const allowedFields: TeamSortField[] = [
+    'name',
+    'city',
+    'state',
+    'conference',
+    'division',
+    'stadium',
+  ]
+
+  sortField.value = allowedFields.includes(requestedField as TeamSortField)
+    ? requestedField as TeamSortField
+    : 'name'
+  sortOrder.value = event.sortOrder === -1 ? -1 : 1
+  currentPage.value = 0
+
+  teamStore.fetchAll(1, rowsPerPage.value, true, sortField.value, sortOrder.value)
 }
 
 const viewTeam = (id: number) => {
@@ -73,11 +108,11 @@ const deleteTeam = async (id: number) => {
   if (confirm('Are you sure you want to delete this team?')) {
     await teamStore.remove(id)
     // Refresh current page after deletion
-    await teamStore.fetchAll(backendPage.value, rowsPerPage.value, true)
+    await teamStore.fetchAll(backendPage.value, rowsPerPage.value, true, sortField.value, sortOrder.value)
   }
 }
-const getNflLogo = (): string => {
-  return `../../images/NFLogo.jpeg`
+const getTeamLogo = (team: TeamRef | null | undefined): TeamLogoInfo => {
+  return getTeamLogoInfo(team)
 }
 </script>
 
@@ -107,19 +142,34 @@ const getNflLogo = (): string => {
       :rows="rowsPerPage"
       :totalRecords="totalRecords"
       :rowsPerPageOptions="[5, 10, 20, 50]"
+      :sortField="sortField"
+      :sortOrder="sortOrder"
       @page="onPageChange"
+      @sort="onSortChange"
       responsiveLayout="scroll"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} teams"
       class="themed-datatable"
     >
-      <Column field="name" header="Team Name" sortable />
+      <Column field="name" header="Team Name" sortable>
+        <template #body="{ data }">
+          <div class="team-name-cell">
+            <img
+              v-if="getTeamLogo(data).logoUrl"
+              :src="getTeamLogo(data).logoUrl"
+              alt=""
+              class="team-logo"
+            />
+            <span>{{ data.name }}</span>
+          </div>
+        </template>
+      </Column>
       <Column field="city" header="City" sortable />
       <Column field="state" header="State" sortable />
       <Column field="conference" header="Conference" sortable />
       <Column field="division" header="Division" sortable />
       <Column field="stadium" header="Stadium" sortable />
-      <Column field="country" header="Country" sortable />
+      
       
       <Column header="Actions">
         <template #body="{ data }">
@@ -168,6 +218,19 @@ const getNflLogo = (): string => {
 .action-buttons {
   display: flex;
   gap: 0.5rem;
+}
+
+.team-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.team-logo {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  object-fit: contain;
 }
 
 /* Updated debug-info with team colors */

@@ -18,6 +18,7 @@ import TeamNeedsPanel from './TeamNeedsPanel.vue'
 import RosterPlayerList from '@/modules/roster/presentation/components/RosterPlayerList.vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
+import { getTeamLogoInfo } from '@/util/teamLogo'
 
 const route = useRoute()
 const themeStore = useThemeStore()
@@ -117,14 +118,35 @@ const loadTeamStatistics = async (teamId: number, seasonYear: number) => {
   }
 }
 
-const getTeamLogo = (team: any): string => {
-  if (!team || !team.name || !team.conference) return ''
+const logoLoadFailed = ref(false)
 
-  const lastWord = team.name.trim().split(/\s+/).pop() || ''
-  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
+const getTeamLogo = (selectedTeam: typeof team.value): string => {
+  if (!selectedTeam?.name || !selectedTeam.conference) return ''
 
-  return `/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`
+  const conferenceValue = selectedTeam.conference.trim().toLowerCase()
+  const normalizedConference =
+    conferenceValue.includes('afc') || conferenceValue.includes('american')
+      ? 'AFC'
+      : conferenceValue.includes('nfc') || conferenceValue.includes('national')
+        ? 'NFC'
+        : selectedTeam.conference
+
+  return getTeamLogoInfo({
+    name: selectedTeam.name,
+    conference: normalizedConference,
+  }).logoUrl
 }
+
+const handleLogoError = (): void => {
+  logoLoadFailed.value = true
+}
+
+watch(
+  () => team.value?.id,
+  () => {
+    logoLoadFailed.value = false
+  },
+)
 
 onMounted(async () => {
   if (route.params.teamId && typeof route.params.teamId === 'string') {
@@ -160,6 +182,13 @@ const createRosterPlayer = () => {
 <template>
   <Card v-if="team" class="team-details bg-team-primary text-team-accent">
     <template #title>
+      <img
+        v-if="getTeamLogo(team) && !logoLoadFailed"
+        :src="getTeamLogo(team)"
+        alt=""
+        class="header-logo"
+        @error="handleLogoError"
+      />
       {{ team.name }}
     </template>
     <template #subtitle style="background-color: #054DBD;">
@@ -171,7 +200,13 @@ const createRosterPlayer = () => {
         <div class="info-section">
           <div class="info-row">
             <h3 class="team-name-with-logo">
-              <img :src="getTeamLogo(team)" :alt="team.name" class="inline-logo" />
+              <img
+                v-if="getTeamLogo(team) && !logoLoadFailed"
+                :src="getTeamLogo(team)"
+                alt=""
+                class="inline-logo"
+                @error="handleLogoError"
+              />
               {{ team.name }}
             </h3>
           </div>
@@ -319,6 +354,10 @@ const createRosterPlayer = () => {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
+}
+.header-logo {
+  height: 52px;
+  width: auto;
 }
 
 .inline-logo {
