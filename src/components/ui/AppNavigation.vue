@@ -240,123 +240,120 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
       ],
     },
 
-    // Draft Menu (Parent menu)
+    // NFL Draft (Parent menu)
     {
-      label: "Draft Menu",
-      icon: "pi pi-folder",
+      label: "NFL Draft",
+      icon: "pi pi-folder-open",
       items: [
-        routeItem({
-          label: "Draft Order",
-          icon: "pi pi-sort-amount-up-alt",
-          to: "/draft-order",
-          requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" },
-        }),
-
-        
-
-        routeItem({
-          label: 'Draft Pick Management',
-          icon: 'pi pi-pencil',
-          to: '/draft-day-scorecard/2026/manage',
-          requiredPerm: { domain: "DRAFT_ORDER", action: "EDIT" },
-        }),
-
-        
-        routeItem({
-          label: "Draft Simulation",
-          icon: "pi pi-stopwatch",
-          to: "/draft-simulator",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: "PFF Mock Draft",
-          icon: "pi pi-stopwatch",
-          to: "/draft-mock",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: "Draft Board",
-          icon: "pi pi-list",
-          to: "/draft-board",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: "Draft Picks",
-          icon: "pi pi-list",
-          to: "/draftPicks",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: "Draft Pick Scraper",
-          icon: "pi pi-cloud-download",
-          to: "/admin/draft-pick-scraper",
-          requiredPerm: { domain: "SCRAPERS", action: "VIEW" },
-        }),
-        routeItem({
-          label: "Prospects",
-          icon: "pi pi-star",
-          to: "/prospects",
-          requiredPerm: { domain: "SCOUTING", action: "VIEW" },
-        }),
-        routeItem({
-          label: "Combine Scores",
+        {
+          label: "Menu",
+          icon: "pi pi-folder",
+          items: [
+            routeItem({
+              label: "Prospects",
+              icon: "pi pi-star",
+              to: "/prospects",
+              requiredPerm: { domain: "SCOUTING", action: "VIEW" },
+            }),
+            routeItem({
+              label: "Combine Scores",
+              icon: "pi pi-chart-bar",
+              to: "/combine-scores",
+              requiredPerm: { domain: "SCOUTING", action: "VIEW" },
+            }),
+            routeItem({
+              label: "Draft Pick Management",
+              icon: "pi pi-pencil",
+              to: "/draft-day-scorecard/2026/manage",
+              requiredPerm: { domain: "DRAFT_ORDER", action: "EDIT" },
+            }),
+            routeItem({
+              label: "Draft Picks",
+              icon: "pi pi-list",
+              to: "/draftPicks",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+            routeItem({
+              label: "Draft Order",
+              icon: "pi pi-sort-amount-up-alt",
+              to: "/draft-order",
+              requiredPerm: { domain: "DRAFT_ORDER", action: "VIEW" },
+            }),
+            routeItem({
+              label: "Draft Board",
+              icon: "pi pi-list",
+              to: "/draft-board",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+            routeItem({
+              label: "Draft Day Scorecard",
+              icon: "pi pi-table",
+              to: "/draft-day-scorecard",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+            routeItem({
+              label: "Live Tracker",
+              icon: "pi pi-stopwatch",
+              // Keep the existing route until a dedicated /draft-live view is added.
+              to: "/draft-analysis",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+            routeItem({
+              label: "Post-Draft Reports",
+              icon: "pi pi-file-check",
+              to: "/post-draft-reports",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+          ],
+        },
+        {
+          label: "Tools",
+          icon: "pi pi-wrench",
+          items: [
+            routeItem({
+              label: "Draft Pick Scraper",
+              icon: "pi pi-cloud-download",
+              to: "/admin/draft-pick-scraper",
+              requiredPerm: { domain: "SCRAPERS", action: "VIEW" },
+            }),
+            routeItem({
+              label: "PFF Mock Draft",
+              icon: "pi pi-stopwatch",
+              to: "/draft-mock",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+            routeItem({
+              label: "Draft Simulation",
+              icon: "pi pi-stopwatch",
+              to: "/draft-simulator",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+          ],
+        },
+        {
+          label: "Analytics",
           icon: "pi pi-chart-bar",
-          to: "/combine-scores",
-          requiredPerm: { domain: "SCOUTING", action: "VIEW" },
-        }),
-      ],
-    },
-
-    // Draft Analytics (Parent menu)
-    {
-      label: "Draft Analytics",
-      icon: "pi pi-chart-bar",
-      items: [
-        routeItem({
-          label: "Post-Draft Reports",
-          icon: "pi pi-file-check",
-          to: "/post-draft-reports",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: "Draft Analysis",
-          icon: "pi pi-chart-bar",
-          to: "/draft-analysis",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: "B4Me Analysis",
-          icon: "pi pi-stopwatch",
-          to: "/b4me-analysis",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: 'Draft Day Scorecard',
-          icon: 'pi pi-table',
-          to: '/draft-day-scorecard',
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: 'WR Metric Ingestion',
-          icon: 'pi pi-database',
-          to: '/post-draft-metrics/wr',
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: "Draft Analytics",
-          icon: "pi pi-chart-line",
-          // keep on the existing route until you add a dedicated /draft-analytics view
-          to: "/draft-analysis",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        routeItem({
-          label: "Live Tracker",
-          icon: "pi pi-stopwatch",
-          // keep on the existing route until you add a dedicated /draft-live view
-          to: "/draft-analysis",
-          requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
-        }),
-        
+          items: [
+            routeItem({
+              label: "B4Me Analysis",
+              icon: "pi pi-stopwatch",
+              to: "/b4me-analysis",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+            routeItem({
+              label: "Draft Analysis",
+              icon: "pi pi-chart-bar",
+              to: "/draft-analysis",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+            routeItem({
+              label: "WR Metric Ingestion",
+              icon: "pi pi-database",
+              to: "/post-draft-metrics/wr",
+              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+            }),
+          ],
+        },
       ],
     },
 
