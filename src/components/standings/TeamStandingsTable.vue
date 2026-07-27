@@ -10,7 +10,18 @@
         >
           <h3>{{ division }}</h3>
           <DataTable :value="teamsByDivision(conference, division)" :rows="10" sortField="pct" :sortOrder="-1">
-            <Column field="teamName" header="Team" sortable />
+            <Column field="teamName" header="Team" sortable>
+              <template #body="{ data }">
+                <div class="team-cell">
+                  <img
+                    class="team-logo"
+                    :src="teamLogo(data as StandingsRow)"
+                    :alt="`${data.teamName ?? data.abbreviation ?? 'Team'} logo`"
+                  />
+                  <span>{{ data.teamName ?? data.abbreviation }}</span>
+                </div>
+              </template>
+            </Column>
             <Column field="wins" header="W" />
             <Column field="losses" header="L" />
             <Column field="ties" header="T" />
@@ -39,6 +50,7 @@
 import { computed, onMounted } from 'vue';
 import { useStandingsStore } from '@/stores/standingsStore';
 import { useRouter } from "vue-router"
+import { resolveTeamLogo } from '@/util/resolveTeamLogo'
 
 interface StandingsRow {
   teamId?: number
@@ -54,6 +66,11 @@ interface StandingsRow {
   pointsAgainst?: number
   conference?: string
   division?: string
+  fullName?: string
+  name?: string
+  city?: string
+  teamLogo?: string
+  logo?: string
 }
 const props = defineProps<{
   title: string
@@ -66,6 +83,18 @@ const props = defineProps<{
 
 const router = useRouter()
 const store = useStandingsStore();
+
+
+function teamLogo(row: StandingsRow): string {
+  return row.teamLogo
+    ?? row.logo
+    ?? resolveTeamLogo(
+      row.fullName,
+      row.name,
+      row.abbreviation,
+      row.teamName,
+    )
+}
 
 function resolveTeamId(r: StandingsRow): number | null {
   const v = r.teamId ?? r.id
@@ -109,5 +138,16 @@ const teamsByDivision = (conf: string, div: string) =>
 .division-block { flex: 1; }
 .textContrast {
   color: #062d92;
+}
+.team-cell {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.team-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex: 0 0 40px;
 }
 </style>
