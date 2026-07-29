@@ -168,8 +168,31 @@ function getSeasonTypeValue(game: GameListRow): ScheduleWeekValue {
   return getRecordValue(game, ['seasonType', 'season_type'])
 }
 
+function isPreseason(seasonType: ScheduleWeekValue): boolean {
+  if (typeof seasonType === 'number') return seasonType === 1
+
+  const normalized = String(seasonType ?? '').trim().toLowerCase()
+  return normalized === '1' || normalized === 'pre' || normalized === 'preseason'
+}
+
+function normalizeGameWeek(
+  gameWeek: ScheduleWeekValue,
+  seasonType: ScheduleWeekValue,
+): ScheduleWeekValue {
+  if (!isPreseason(seasonType)) return gameWeek
+
+  const numericWeek = Number(gameWeek)
+  if (!Number.isInteger(numericWeek) || numericWeek <= 1) return gameWeek
+
+  // Imported preseason games are stored as weeks 2-4, but the UI should show PRE 1-3.
+  return numericWeek - 1
+}
+
 function getGameWeekLabel(game: GameListRow): string {
-  return formatScheduleWeekLabel(getGameWeekValue(game), getSeasonTypeValue(game))
+  const seasonType = getSeasonTypeValue(game)
+  const gameWeek = normalizeGameWeek(getGameWeekValue(game), seasonType)
+
+  return formatScheduleWeekLabel(gameWeek, seasonType)
 }
 
 const isWinningScore = (score1: number | undefined, score2: number | undefined) => {
