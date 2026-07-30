@@ -9,8 +9,8 @@ const handleJobsSubmitted = (jobIds: number[]): void => {
 <template>
   <section class="dpa-nfl-jobs-page">
     <div class="page-header">
-      <h2>Import NFL Data</h2>
-      <p>Queue NFL season schedule and weekly score imports.</p>
+      <h2>NFL Imports</h2>
+      <p>Import schedule and score data, synchronize postseason results, and generate team needs.</p>
     </div>
 
     <DpaNflJobsPanel @jobs-submitted="handleJobsSubmitted" />

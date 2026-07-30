@@ -17,7 +17,7 @@ export interface UseDraftPickReturn {
   isLoading: ComputedRef<boolean>;
   hasError: ComputedRef<boolean>;
   fetchAll: (filters?: {
-    draftYear?: number;
+    draftYear: number;
     currentTeamId?: number;
     used?: boolean;
     round?: number;
@@ -61,7 +61,7 @@ export function useDraftPick(): UseDraftPickReturn {
   };
 
   const fetchAll = async (filters?: {
-    draftYear?: number;
+    draftYear: number;
     currentTeamId?: number;
     used?: boolean;
     round?: number;

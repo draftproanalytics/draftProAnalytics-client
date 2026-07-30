@@ -39,7 +39,7 @@ export interface CreateDraftPickData {
 export interface UpdateDraftPickData {
   round?: number;
   pickNumber?: number;
-  draftYear?: number;
+  draftYear: number;
   currentTeamId?: number;
   prospectId?: number | null;
   playerId?: number | null;

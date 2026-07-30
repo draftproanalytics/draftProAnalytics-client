@@ -28,7 +28,7 @@ export interface ResolvedMetricValue {
 }
 export type ResolvedWrMetrics = Partial<Record<WrMetricKey, ResolvedMetricValue>> & {
   prospectId?: number
-  draftYear?: number
+  draftYear: number
   providerPriority?: unknown
   records?: WrMetricRecord[]
 }

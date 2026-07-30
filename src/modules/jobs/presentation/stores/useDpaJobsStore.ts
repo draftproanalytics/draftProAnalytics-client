@@ -15,6 +15,7 @@ import type {
   SyncEspnDraftPicksToDpaCommand,
   LoadEspnTeamRostersCommand,
   SyncPostSeasonResultsCommand,
+  GenerateTeamNeedsCommand,
   ProcessJobQueueResult,
 } from '../../domain/NflJobTypes';
 import { dpaJobsApi } from '../../application/DpaJobsApi';
@@ -108,6 +109,13 @@ export const useDpaJobsStore = defineStore('dpaJobs', () => {
   const enqueueSyncPostSeasonResults = async (command: SyncPostSeasonResultsCommand): Promise<DpaJobSummary> => {
     submitting.value = true; errorMessage.value = null;
     try { const job = await dpaJobsApi.enqueueSyncPostSeasonResults(command); await refreshJobs({ limit: 50 }); return job; }
+    catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
+  };
+
+
+  const enqueueGenerateTeamNeeds = async (command: GenerateTeamNeedsCommand): Promise<DpaJobSummary> => {
+    submitting.value = true; errorMessage.value = null;
+    try { const job = await dpaJobsApi.enqueueGenerateTeamNeeds(command); await refreshJobs({ limit: 50 }); return job; }
     catch (error) { errorMessage.value = getErrorMessage(error); throw error; } finally { submitting.value = false; }
   };
 
@@ -213,6 +221,7 @@ export const useDpaJobsStore = defineStore('dpaJobs', () => {
     enqueueSyncEspnDraftPicksToDpa,
     enqueueLoadEspnTeamRosters,
     enqueueSyncPostSeasonResults,
+    enqueueGenerateTeamNeeds,
     processJobQueue,
     refreshJobs,
     readJob,
