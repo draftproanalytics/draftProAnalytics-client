@@ -58,6 +58,7 @@ export const getJobTypeLabel = (jobType: string): string => {
   if (jobType === DPA_JOB_TYPE.SYNC_ESPN_DRAFT_PICKS_TO_DPA) return 'Sync ESPN Draft Picks to DPA';
   if (jobType === DPA_JOB_TYPE.LOAD_ESPN_TEAM_ROSTERS) return 'Load ESPN Team Rosters';
   if (jobType === DPA_JOB_TYPE.SYNC_POSTSEASON_RESULTS_FROM_GAMES) return 'Sync Postseason Results from Games';
+  if (jobType === DPA_JOB_TYPE.GENERATE_TEAM_NEEDS) return 'Generate Team Needs';
 
   if (jobType === DPA_JOB_TYPE.PROCESS_JOB_QUEUE) {
     return 'Process Job Queue';
@@ -107,4 +108,5 @@ export const dpaJobTypeOptions: readonly { readonly label: string; readonly valu
   { label: 'Sync ESPN Draft Picks to DPA', value: DPA_JOB_TYPE.SYNC_ESPN_DRAFT_PICKS_TO_DPA },
   { label: 'Load ESPN Team Rosters', value: DPA_JOB_TYPE.LOAD_ESPN_TEAM_ROSTERS },
   { label: 'Sync Postseason Results from Games', value: DPA_JOB_TYPE.SYNC_POSTSEASON_RESULTS_FROM_GAMES },
+  { label: 'Generate Team Needs', value: DPA_JOB_TYPE.GENERATE_TEAM_NEEDS },
 ];

@@ -50,7 +50,7 @@ export const useDraftPickStore = defineStore('draftPick', () => {
   })
 
 const fetchAll = async (filters?: {
-    draftYear?: number;
+    draftYear: number;
     currentTeamId?: number;
     used?: boolean;
     round?: number;

@@ -131,7 +131,7 @@ export interface SeedDraftPicksRequestDto {
 
 export interface UpdateDraftPickRequestDto {
   draftEventId?: number | null
-  draftYear?: number
+  draftYear: number
   round?: number
   pickNumber?: number
   overallPick?: number | null

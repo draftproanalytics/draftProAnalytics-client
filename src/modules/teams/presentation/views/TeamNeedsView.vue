@@ -10,53 +10,69 @@ import Divider from "primevue/divider";
 import InputNumber from "primevue/inputnumber";
 import { useTeamNeedsStore } from "../../application/stores/useTeamNeedsStore";
 import type { TeamNeedDto, TeamNeedSuggestionDto } from "../../domain/dtos/TeamNeedDtos";
+import TeamTalentAssessmentPanel from "./TeamTalentAssessmentPanel.vue";
 
 const route = useRoute();
 const store = useTeamNeedsStore();
-
 const teamId = computed(() => Number(route.params.teamId));
+const selectedDraftYear = ref(new Date().getFullYear() + 1);
+const editing = ref<Record<string, { priority: number; draftYear: number }>>({});
 
-const editing = ref<Record<string, { priority: number; draftYear: number | null }>>({});
+function editKey(position: string, draftYear: number): string {
+  return `${draftYear}:${position}`;
+}
 
 function prioritySeverity(priority: number): "success" | "info" | "warning" | "danger" {
-  if (priority >= 5) return "danger";
-  if (priority === 4) return "warning";
+  if (priority === 1) return "danger";
+  if (priority === 2) return "warning";
   if (priority === 3) return "info";
   return "success";
 }
 
 function ensureEditRow(need: TeamNeedDto): void {
-  if (!editing.value[need.position]) {
-    editing.value[need.position] = {
-      priority: need.priority,
-      draftYear: need.draftYear ?? null
-    };
+  const key = editKey(need.position, need.draftYear);
+  if (!editing.value[key]) {
+    editing.value[key] = { priority: need.priority, draftYear: need.draftYear };
+  }
+}
+
+function editRow(need: TeamNeedDto): { priority: number; draftYear: number } {
+  ensureEditRow(need);
+  return editing.value[editKey(need.position, need.draftYear)];
+}
+
+async function loadNeeds(): Promise<void> {
+  if (Number.isInteger(teamId.value) && Number.isInteger(selectedDraftYear.value)) {
+    await store.load(teamId.value, selectedDraftYear.value);
   }
 }
 
 async function saveNeed(need: TeamNeedDto): Promise<void> {
-  ensureEditRow(need);
-  const draft = editing.value[need.position];
-  await store.saveNeed(teamId.value, { position: need.position, priority: draft.priority, draftYear: draft.draftYear });
+  const draft = editRow(need);
+  await store.saveNeed(teamId.value, {
+    position: need.position,
+    priority: draft.priority,
+    draftYear: draft.draftYear
+  });
 }
 
-async function applySuggestion(s: TeamNeedSuggestionDto): Promise<void> {
-  await store.applySuggestion(teamId.value, s);
+async function applySuggestion(suggestion: TeamNeedSuggestionDto): Promise<void> {
+  await store.applySuggestion(teamId.value, suggestion);
 }
 
-async function deleteNeed(pos: string): Promise<void> {
-  await store.deleteNeed(teamId.value, pos);
+async function reviewNeed(need: TeamNeedDto, status: 'APPROVED' | 'REJECTED'): Promise<void> {
+  await store.reviewNeed(need.id, status);
 }
 
-const persistedNeedsSorted = computed(() => {
-  return [...store.persistedNeeds].sort((a, b) => b.priority - a.priority || a.position.localeCompare(b.position));
-});
+async function deleteNeed(need: TeamNeedDto): Promise<void> {
+  await store.deleteNeed(teamId.value, need.draftYear, need.position);
+}
 
-onMounted(async () => {
-  if (Number.isInteger(teamId.value)) {
-    await store.load(teamId.value);
-  }
-});
+const persistedNeedsSorted = computed(() =>
+  [...store.persistedNeeds].sort((a, b) => a.priority - b.priority || a.position.localeCompare(b.position))
+);
+
+onMounted(loadNeeds);
 </script>
 
 <template>
@@ -69,7 +85,18 @@ onMounted(async () => {
         </div>
       </div>
 
-      <Button label="Refresh" icon="pi pi-refresh" :loading="store.isLoading" @click="store.load(teamId)" />
+      <div class="flex items-center gap-2">
+        <label for="draft-year" class="text-sm font-medium">Draft year</label>
+        <InputNumber
+          id="draft-year"
+          v-model="selectedDraftYear"
+          :useGrouping="false"
+          :min="1936"
+          :max="2155"
+          inputClass="w-7rem"
+        />
+        <Button label="Load" icon="pi pi-refresh" :loading="store.isLoading" @click="loadNeeds" />
+      </div>
     </div>
 
     <div v-if="store.error" class="mb-3 p-3 border-round surface-100 text-red-600">
@@ -120,6 +147,10 @@ onMounted(async () => {
 
       <Divider />
 
+      <TeamTalentAssessmentPanel :teamId="teamId" :draftYear="selectedDraftYear" />
+
+      <Divider />
+
       <Card>
         <template #title>Saved needs (persisted)</template>
         <template #content>
@@ -130,7 +161,7 @@ onMounted(async () => {
                 <div class="flex items-center gap-2">
                   <Tag :value="data.priority" :severity="prioritySeverity(data.priority)" />
                   <InputNumber
-                    v-model="editing[data.position].priority"
+                    v-model="editRow(data).priority"
                     :min="1"
                     :max="5"
                     :useGrouping="false"
@@ -143,19 +174,23 @@ onMounted(async () => {
             <Column header="Draft year" style="width: 220px">
               <template #body="{ data }">
                 <InputNumber
-                  v-model="editing[data.position].draftYear"
+                  v-model="editRow(data).draftYear"
                   :useGrouping="false"
                   inputClass="w-8rem"
-                  placeholder="(optional)"
+                  placeholder="Required"
                   @focus="ensureEditRow(data)"
                 />
               </template>
             </Column>
-            <Column header="" style="width: 220px">
+            <Column field="source" header="Source" sortable style="width: 120px" />
+            <Column field="status" header="Status" sortable style="width: 140px" />
+            <Column header="" style="width: 360px">
               <template #body="{ data }">
                 <div class="flex gap-2">
+                  <Button v-if="data.status === 'RECOMMENDED'" label="Approve" icon="pi pi-check" size="small" severity="success" @click="reviewNeed(data, 'APPROVED')" />
+                  <Button v-if="data.status === 'RECOMMENDED'" label="Reject" icon="pi pi-times" size="small" severity="secondary" @click="reviewNeed(data, 'REJECTED')" />
                   <Button label="Save" icon="pi pi-save" size="small" @click="saveNeed(data)" />
-                  <Button label="Remove" icon="pi pi-trash" size="small" severity="danger" @click="deleteNeed(data.position)" />
+                  <Button label="Remove" icon="pi pi-trash" size="small" severity="danger" @click="deleteNeed(data)" />
                 </div>
               </template>
             </Column>

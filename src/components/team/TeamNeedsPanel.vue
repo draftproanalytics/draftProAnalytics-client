@@ -19,7 +19,7 @@ interface TeamNeedRow {
   teamId: number
   position: string
   priority: number
-  draftYear?: number | null
+  draftYear: number | null
   createdAt?: string | null
   updatedAt?: string | null
 }

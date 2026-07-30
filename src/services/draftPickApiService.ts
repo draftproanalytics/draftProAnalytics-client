@@ -28,7 +28,7 @@ export class DraftPickApiService {
   }
 
   async findAll(filters?: {
-    draftYear?: number
+    draftYear: number
     currentTeamId?: number
     used?: boolean
     round?: number

@@ -16,6 +16,7 @@ export const DPA_JOB_TYPE = {
   SYNC_ESPN_DRAFT_PICKS_TO_DPA: 'SYNC_ESPN_DRAFT_PICKS_TO_DPA',
   LOAD_ESPN_TEAM_ROSTERS: 'LOAD_ESPN_TEAM_ROSTERS',
   SYNC_POSTSEASON_RESULTS_FROM_GAMES: 'SYNC_POSTSEASON_RESULTS_FROM_GAMES',
+  GENERATE_TEAM_NEEDS: 'GENERATE_TEAM_NEEDS',
 } as const;
 
 export type DpaJobType = (typeof DPA_JOB_TYPE)[keyof typeof DPA_JOB_TYPE];
@@ -58,6 +59,15 @@ export interface LoadEspnTeamRostersCommand {
   readonly requestedByPersonId?: number;
 }
 
+export interface GenerateTeamNeedsCommand {
+  readonly draftYear: number;
+  readonly asOfDate: string;
+  readonly teamId?: number;
+  readonly replaceRecommendations: boolean;
+  readonly algorithmVersion: string;
+  readonly requestedByPersonId?: number;
+}
+
 export interface SyncPostSeasonResultsCommand { readonly seasonYear: number; readonly overwriteExisting: boolean; readonly requestedByPersonId?: number; }
 
 export interface ProcessJobQueueCommand {
@@ -73,6 +83,7 @@ export type DpaJobPayload =
   | SyncEspnDraftPicksToDpaCommand
   | LoadEspnTeamRostersCommand
   | SyncPostSeasonResultsCommand
+  | GenerateTeamNeedsCommand
   | Record<string, unknown>
   | null;
 

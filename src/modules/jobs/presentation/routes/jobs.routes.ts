@@ -19,7 +19,7 @@ export const jobsRoutes: readonly RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       perm: { domain: 'JOBS', action: 'RUN' },
-      title: 'Import NFL Data',
+      title: 'NFL Imports',
     },
   },
   {
