@@ -6,6 +6,7 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 import Dropdown from 'primevue/dropdown'
+import Calendar from 'primevue/calendar'
 import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
 import { api } from '@/services/api'
@@ -19,7 +20,7 @@ interface TeamNeedRow {
   teamId: number
   position: string
   priority: number
-  draftYear: number | null
+  draftYear: Date | null
   createdAt?: string | null
   updatedAt?: string | null
 }
@@ -70,6 +71,7 @@ const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 const selectedPosition = ref<string | null>(null)
 const priority = ref<number>(1)
+const draftYear = ref<Date | null>(null)
 
 const positionNameByCode = new Map(
   positionOptions.map((option) => [option.value, option.label]),
@@ -87,6 +89,7 @@ const hasSelectedNeeds = computed<boolean>(() => selectedNeedIds.value.length > 
 const resetForm = (): void => {
   selectedPosition.value = null
   priority.value = 1
+  draftYear.value = null
 }
 
 const readErrorMessage = (error: unknown): string => {
@@ -177,6 +180,10 @@ const addNeed = async (): Promise<void> => {
     errorMessage.value = 'Select a position.'
     return
   }
+  if (!draftYear.value) {
+    errorMessage.value = 'Enter a valid value for Draft Year.'
+    return
+  }
 
   saving.value = true
   errorMessage.value = null
@@ -187,6 +194,7 @@ const addNeed = async (): Promise<void> => {
       teamId: props.teamId,
       position: selectedPosition.value,
       priority: priority.value,
+      draftYear: draftYear.value ? draftYear.value.getFullYear() : null,
     })
 
     await loadNeeds()
@@ -217,54 +225,27 @@ watch(
 <template>
   <section class="team-needs-panel">
     <div class="actions-row">
-      <Button
-        label="Add Need"
-        icon="pi pi-plus"
-        @click="showAddForm"
-      />
-      <Button
-        label="Remove Need"
-        icon="pi pi-trash"
-        severity="danger"
-        :disabled="!hasSelectedNeeds || deleting"
-        :loading="deleting"
-        @click="removeSelectedNeeds"
-      />
+      <Button label="Add Need" icon="pi pi-plus" @click="showAddForm" />
+      <Button label="Remove Need" icon="pi pi-trash" severity="danger" :disabled="!hasSelectedNeeds || deleting"
+        :loading="deleting" @click="removeSelectedNeeds" />
     </div>
 
     <Message v-if="successMessage" severity="success" :closable="true" class="panel-message">
       {{ successMessage }}
     </Message>
 
-    <Message
-      v-if="errorMessage && !formVisible"
-      severity="error"
-      :closable="false"
-      class="panel-message"
-    >
+    <Message v-if="errorMessage && !formVisible" severity="error" :closable="false" class="panel-message">
       {{ errorMessage }}
     </Message>
 
-    <DataTable
-      v-if="loading || displayNeeds.length > 0"
-      :value="displayNeeds"
-      data-key="id"
-      :loading="loading"
-      responsive-layout="scroll"
-      striped-rows
-      class="needs-table"
-    >
+    <DataTable v-if="loading || displayNeeds.length > 0" :value="displayNeeds" data-key="id" :loading="loading"
+      responsive-layout="scroll" striped-rows class="needs-table">
       <Column field="positionName" header="Position" sortable />
       <Column field="priority" header="Priority" sortable />
       <Column header="Action" body-class="action-column" header-class="action-column">
         <template #body="{ data }">
-          <Checkbox
-            :model-value="selectedNeedIds.includes(data.id)"
-            binary
-            :input-id="`team-need-${data.id}`"
-            :aria-label="`Select ${data.positionName}`"
-            @update:model-value="toggleNeedSelection(data.id, $event)"
-          />
+          <Checkbox :model-value="selectedNeedIds.includes(data.id)" binary :input-id="`team-need-${data.id}`"
+            :aria-label="`Select ${data.positionName}`" @update:model-value="toggleNeedSelection(data.id, $event)" />
         </template>
       </Column>
     </DataTable>
@@ -273,63 +254,34 @@ watch(
       No team needs have been entered for this team.
     </div>
 
-    <Dialog
-      v-model:visible="formVisible"
-      modal
-      header="Add Team Need"
-      :draggable="false"
-      :dismissable-mask="!saving"
-      :closable="!saving"
-      class="team-need-dialog"
-      @hide="cancelAdd"
-    >
+    <Dialog v-model:visible="formVisible" modal header="Add Team Need" :draggable="false" :dismissable-mask="!saving"
+      :closable="!saving" class="team-need-dialog" @hide="cancelAdd">
       <form class="need-form" @submit.prevent="addNeed">
         <Message v-if="errorMessage" severity="error" :closable="false">
           {{ errorMessage }}
         </Message>
 
+
+        <div class="form-field">
+          <label for="draft-year">Draft Year</label>
+          <Calendar id="draft-year" v-model="draftYear" view="year" dateFormat="yy" class="field-control" />
+        </div>
+
         <div class="form-field">
           <label for="team-need-position">Position</label>
-          <Dropdown
-            id="team-need-position"
-            v-model="selectedPosition"
-            :options="positionOptions"
-            option-label="label"
-            option-value="value"
-            placeholder="Select position"
-            class="field-control"
-            autofocus
-          />
+          <Dropdown id="team-need-position" v-model="selectedPosition" :options="positionOptions" option-label="label"
+            option-value="value" placeholder="Select position" class="field-control" autofocus />
         </div>
 
         <div class="form-field">
           <label for="team-need-priority">Priority</label>
-          <InputNumber
-            id="team-need-priority"
-            v-model="priority"
-            :min="1"
-            :max="10"
-            :use-grouping="false"
-            show-buttons
-            class="field-control"
-          />
+          <InputNumber id="team-need-priority" v-model="priority" :min="1" :max="10" :use-grouping="false" show-buttons
+            class="field-control" />
         </div>
 
         <div class="form-actions">
-          <Button
-            type="button"
-            label="Cancel"
-            severity="secondary"
-            outlined
-            :disabled="saving"
-            @click="cancelAdd"
-          />
-          <Button
-            type="submit"
-            label="Save Need"
-            icon="pi pi-check"
-            :loading="saving"
-          />
+          <Button type="button" label="Cancel" severity="secondary" outlined :disabled="saving" @click="cancelAdd" />
+          <Button type="submit" label="Save Need" icon="pi pi-check" :loading="saving" />
         </div>
       </form>
     </Dialog>
