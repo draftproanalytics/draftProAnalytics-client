@@ -9,6 +9,7 @@ import WeeklyScoresImportPanel from './WeeklyScoresImportPanel.vue'
 import JobMonitorPanel from './JobMonitorPanel.vue'
 import EspnDraftImportPanel from './EspnDraftImportPanel.vue'
 import EspnTeamRosterImportPanel from './EspnTeamRosterImportPanel.vue'
+import NflversePlayerProductionPanel from './NflversePlayerProductionPanel.vue'
 
 const emit = defineEmits<{
   readonly 'jobs-submitted': [jobIds: number[]]
@@ -20,7 +21,7 @@ const activeTabIndex = ref(0)
 const handleJobSubmitted = (jobId: number): void => {
   submittedJobIds.push(jobId)
   emit('jobs-submitted', [...submittedJobIds])
-  activeTabIndex.value = 6
+  activeTabIndex.value = 7
 }
 </script>
 
@@ -60,6 +61,12 @@ const handleJobSubmitted = (jobId: number): void => {
       <TabPanel header="Team Roster">
         <div class="tab-content">
           <EspnTeamRosterImportPanel @job-submitted="handleJobSubmitted" />
+        </div>
+      </TabPanel>
+
+      <TabPanel header="Player Performance">
+        <div class="tab-content">
+          <NflversePlayerProductionPanel @job-submitted="handleJobSubmitted" />
         </div>
       </TabPanel>
 

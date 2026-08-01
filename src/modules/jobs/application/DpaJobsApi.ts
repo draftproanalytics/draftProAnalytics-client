@@ -15,6 +15,9 @@ import type {
   GenerateTeamNeedsCommand,
   ProcessJobQueueCommand,
   ProcessJobQueueResult,
+  ImportNflversePlayerProductionCommand,
+  NflverseProductionReviewRow,
+  RosterMatchCandidate,
 } from '../domain/NflJobTypes';
 
 const resolveApiBaseUrl = (): string => {
@@ -56,6 +59,13 @@ export class DpaJobsApi {
   }
 
   public async enqueueSyncPostSeasonResults(command: SyncPostSeasonResultsCommand): Promise<DpaJobSummary> { const response = await httpClient.post<DpaJobSummary>('/jobs/imports/postseason-results/sync', command); return response.data; }
+
+  public async enqueueImportNflversePlayerProduction(command: ImportNflversePlayerProductionCommand): Promise<DpaJobSummary> { const response = await httpClient.post<DpaJobSummary>('/jobs/imports/nflverse-player-production', command); return response.data; }
+  public async listNflverseProductionReview(seasonYear: number, status?: string): Promise<readonly NflverseProductionReviewRow[]> { const response = await httpClient.get<readonly NflverseProductionReviewRow[]>('/jobs/player-production/review', { params: { seasonYear, status } }); return response.data; }
+  public async listNflverseMatchCandidates(id: string): Promise<readonly RosterMatchCandidate[]> { const response = await httpClient.get<readonly RosterMatchCandidate[]>(`/jobs/player-production/review/${id}/candidates`); return response.data; }
+  public async updateNflverseMatch(id: string, matchedRosterPlayerId: string | null, matchStatus: string, reviewNotes?: string): Promise<void> { await httpClient.patch(`/jobs/player-production/review/${id}`, { matchedRosterPlayerId, matchStatus, reviewNotes }); }
+  public async promoteNflverseProduction(seasonYear: number): Promise<{ promoted: number; skipped: number }> { const response = await httpClient.post('/jobs/player-production/promote', { seasonYear }); return response.data; }
+  public async recalculateNflverseAssessments(seasonYear: number, draftYear: number, teamId?: number): Promise<{ assessmentsUpdated: number }> { const response = await httpClient.post('/jobs/player-production/recalculate', { seasonYear, draftYear, teamId }); return response.data; }
 
   public async processJobQueue(command: ProcessJobQueueCommand): Promise<ProcessJobQueueResult> {
     const response = await httpClient.post<ProcessJobQueueResult>('/jobs/queue/process', command);

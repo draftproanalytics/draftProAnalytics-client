@@ -17,6 +17,7 @@ export const DPA_JOB_TYPE = {
   LOAD_ESPN_TEAM_ROSTERS: 'LOAD_ESPN_TEAM_ROSTERS',
   SYNC_POSTSEASON_RESULTS_FROM_GAMES: 'SYNC_POSTSEASON_RESULTS_FROM_GAMES',
   GENERATE_TEAM_NEEDS: 'GENERATE_TEAM_NEEDS',
+  IMPORT_NFLVERSE_PLAYER_PRODUCTION: 'IMPORT_NFLVERSE_PLAYER_PRODUCTION',
 } as const;
 
 export type DpaJobType = (typeof DPA_JOB_TYPE)[keyof typeof DPA_JOB_TYPE];
@@ -139,3 +140,7 @@ export interface WeekOption {
   readonly label: string;
   readonly value: number;
 }
+
+export interface ImportNflversePlayerProductionCommand { readonly seasonYear: number; readonly teamId?: number; readonly summaryLevel: 'reg' | 'post' | 'regpost'; readonly requestedByPersonId?: number; }
+export interface NflverseProductionReviewRow { readonly id: string; readonly seasonYear: number; readonly playerName: string; readonly teamAbbreviation: string | null; readonly position: string | null; readonly positionGroup: string | null; readonly suggestedRosterPlayerId: string | null; readonly matchedRosterPlayerId: string | null; readonly matchConfidence: string | number | null; readonly matchStatus: string; readonly reviewNotes: string | null; readonly metricsJson: Record<string, unknown>; }
+export interface RosterMatchCandidate { readonly id: string; readonly teamId: number; readonly playerName: string; readonly position: string; readonly positionGroup: string; }
