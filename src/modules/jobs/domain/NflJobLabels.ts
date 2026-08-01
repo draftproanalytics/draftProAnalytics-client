@@ -59,6 +59,7 @@ export const getJobTypeLabel = (jobType: string): string => {
   if (jobType === DPA_JOB_TYPE.LOAD_ESPN_TEAM_ROSTERS) return 'Load ESPN Team Rosters';
   if (jobType === DPA_JOB_TYPE.SYNC_POSTSEASON_RESULTS_FROM_GAMES) return 'Sync Postseason Results from Games';
   if (jobType === DPA_JOB_TYPE.GENERATE_TEAM_NEEDS) return 'Generate Team Needs';
+  if (jobType === DPA_JOB_TYPE.IMPORT_NFLVERSE_PLAYER_PRODUCTION) return 'Import Player Performance';
 
   if (jobType === DPA_JOB_TYPE.PROCESS_JOB_QUEUE) {
     return 'Process Job Queue';

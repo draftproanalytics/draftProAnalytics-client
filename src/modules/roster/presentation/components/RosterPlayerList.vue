@@ -118,6 +118,7 @@ watch(() => props.teamId, loadRoster)
           <Tag
             :value="data.position || 'Unknown'"
             :severity="positionSeverity(data.position)"
+            class="roster-position-tag"
           />
         </template>
       </Column>
@@ -147,6 +148,7 @@ watch(() => props.teamId, loadRoster)
           <Tag
             :value="data.isActive ? 'Active' : 'Inactive'"
             :severity="data.isActive ? 'success' : 'secondary'"
+            class="roster-status-tag"
           />
         </template>
       </Column>
@@ -171,9 +173,21 @@ watch(() => props.teamId, loadRoster)
 .player-search :deep(.p-inputtext) { width: 100%; }
 .player-cell { display: flex; flex-direction: column; gap: 0.15rem; }
 .player-cell small { color: var(--text-color-secondary); }
+
+/* PrimeVue applies severity text colors on the rendered Tag internals.
+   The global rule below overrides those theme selectors. */
 .error-message { margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: 6px; background: var(--red-50); color: var(--red-700); }
 .empty-state { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 3rem 1rem; color: var(--text-color-secondary); }
 .empty-state i { font-size: 2.5rem; }
 .empty-state p { margin: 0; }
 @media (max-width: 720px) { .toolbar-actions, .player-search { width: 100%; } }
+</style>
+
+<style>
+.roster-position-tag.p-tag,
+.roster-status-tag.p-tag,
+.roster-position-tag.p-tag .p-tag-value,
+.roster-status-tag.p-tag .p-tag-value {
+  color: #000000 !important;
+}
 </style>
