@@ -1,15 +1,17 @@
-<!-- src/modules/auth/presentation/views/LoginView.vue -->
+<!-- DraftProAnalytics™ | Copyright © 2025-2026 Darryl Thompson. All rights reserved. -->
+<!-- See LICENSE and TRADEMARKS.md. -->
 <template>
   <div class="login-page min-h-screen flex items-center justify-center px-4">
     <div class="w-full max-w-md">
       <div class="login-card card rounded-2xl shadow-xl border p-6 sm:p-8">
         <!-- Header -->
         <div class="mb-6 text-center">
-          <h2 class="text-2xl font-semibold text-slate-900">
+          <p class="brand-name" aria-label="DraftProAnalytics trademark">DraftProAnalytics™</p>
+          <h2 class="mt-2 text-2xl font-semibold text-slate-900">
             Sign in
           </h2>
           <p class="mt-1 text-sm text-slate-800">
-            Access your Sports Management dashboard
+            Access your NFL draft analytics dashboard
           </p>
         </div>
 
@@ -91,6 +93,9 @@
             </p>
           </form>
         </div>
+        <p class="ownership-notice">
+          DraftProAnalytics™ · Copyright © 2025-2026 Darryl Thompson. All rights reserved.
+        </p>
       </div>
     </div>
   </div>
@@ -210,6 +215,22 @@ onMounted(async () => {
 .login-card {
   background-color: #b66e00;
   border-color: rgba(255, 255, 255, 0.65);
+}
+
+.brand-name {
+  margin: 0;
+  color: #111827;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.ownership-notice {
+  margin: 0.9rem 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .field-group {

@@ -1,3 +1,5 @@
+// DraftProAnalytics™ | Copyright © 2025-2026 Darryl Thompson. All rights reserved.
+// See LICENSE and TRADEMARKS.md.
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
