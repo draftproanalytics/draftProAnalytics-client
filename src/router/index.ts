@@ -27,11 +27,8 @@ import DraftBoard from '@/views/DraftboardView.vue'
 import ScheduleDetail from '@/views/GameScheduleView.vue'
 import ForbiddenView from '@/views/ForbiddenView.vue'
 
-// auth module views
-import LoginView from '@/modules/auth/presentation/views/LoginView.vue'
-import RegisterView from '@/modules/auth/presentation/views/RegisterView.vue'
-import VerifyEmailView from '@/modules/auth/presentation/views/VerifyEmailView.vue'
-
+// auth routes
+import { authRoutes } from '@/modules/auth/presentation/router/authRoutes'
 // other views
 import { draftOrderRoutes } from '@/modules/draftOrder/presentation/router/draftOrderRoutes'
 import { mockDraftRoutes } from '@/modules/draftMock/routes'
@@ -46,6 +43,7 @@ import { playoffsRoutes } from '../modules/playoffs/presentation/routes/playoffs
 import { teamNeedsRoutes } from '@/modules/teams/presentation/router/teamNeedsRoutes'
 import { adminAccessRoutes } from '@/modules/accessControl/presentation/routes/adminAccess.routes'
 import { teamNeedsAnalysisRoutes } from '@/modules/teamNeedsAnalysis'
+
 
 type RoutePermission = { domain: DomainCode; action: ActionCode }
 
@@ -115,24 +113,7 @@ const routes: RouteRecordRaw[] = [
   // ─────────────────────────
   // PUBLIC / AUTH (standalone)
   // ─────────────────────────
-  {
-    path: '/login',
-    name: 'Login',
-    component: LoginView,
-    meta: { public: true, onlyWhenLoggedOut: true },
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: RegisterView,
-    meta: { public: true, onlyWhenLoggedOut: true },
-  },
-  {
-    path: '/verify-email/:token',
-    name: 'VerifyEmail',
-    component: VerifyEmailView,
-    meta: { public: true },
-  },
+  ...authRoutes,
 
   // ─────────────────────────
   // APP (shell layout w/ left nav)

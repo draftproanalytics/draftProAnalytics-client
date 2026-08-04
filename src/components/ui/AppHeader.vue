@@ -64,7 +64,10 @@ const handleLogoutClick = async (): Promise<void> => {
         </span>
 
         <h1 class="app-title">
-          <span class="brand-wordmark">DraftProAnalytics<sup class="brand-mark">™</sup></span>
+          <span class="brand-lockup">
+            <span class="brand-product">RosterTheory<sup class="brand-mark">™</sup></span>
+            <span class="brand-provider">by DraftProAnalytics<sup class="brand-mark brand-mark--small">™</sup></span>
+          </span>
         </h1>
       </div>
 
@@ -161,11 +164,31 @@ const handleLogoutClick = async (): Promise<void> => {
   transition: opacity 0.2s;
 }
 
-.brand-wordmark {
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.05;
+}
+
+.brand-product {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.1rem;
+  gap: 0.08rem;
+  font-size: 1.35rem;
+  font-weight: 800;
   letter-spacing: 0.2px;
+}
+
+.brand-provider {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.06rem;
+  margin-top: 0.22rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  opacity: 0.9;
 }
 
 .brand-mark {
@@ -173,6 +196,10 @@ const handleLogoutClick = async (): Promise<void> => {
   line-height: 1;
   vertical-align: super;
   margin-left: 0.08em;
+}
+
+.brand-mark--small {
+  font-size: 0.55em;
 }
 
 .header-left:hover .app-title {
