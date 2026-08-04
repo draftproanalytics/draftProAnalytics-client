@@ -51,5 +51,8 @@
   },
   "_moduleAliases": {
     "@": "./dist/src"
-  }
+  },
+  "description": "DraftProAnalytics\u2122 web client",
+  "author": "Darryl Thompson",
+  "license": "UNLICENSED"
 }

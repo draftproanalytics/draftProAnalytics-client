@@ -41,11 +41,15 @@ function goToLogin(): void {
 </script>
 
 <template>
-  <div class="forgot-page min-h-screen flex items-center justify-center px-4">
-    <div class="w-full max-w-md">
-      <div class="forgot-card card rounded-2xl shadow-xl border p-6 sm:p-8">
+  <div class="forgot-page">
+    <div class="forgot-container">
+      <div class="forgot-card">
         <div class="mb-6 text-center">
-          <h2 class="text-2xl font-semibold">
+          <div class="auth-brand" aria-label="RosterTheory by DraftProAnalytics">
+            <p class="product-brand"><span class="brand-roster">Roster</span><span class="brand-theory">Theory<sup>™</sup></span></p>
+            <p class="parent-brand">by DraftProAnalytics<sup>™</sup></p>
+          </div>
+          <h2 class="mt-3 text-2xl font-semibold">
             Forgot password
           </h2>
           <p class="mt-1 text-sm">
@@ -53,7 +57,8 @@ function goToLogin(): void {
           </p>
         </div>
 
-        <div class="field-group">
+        <div class="auth-form-column">
+          <div class="field-group">
           <form class="space-y-4" @submit.prevent="onSubmit">
             <div class="form-row">
               <label for="emailAddress" class="form-label">Email</label>
@@ -87,6 +92,7 @@ function goToLogin(): void {
               @click="goToLogin"
             />
           </form>
+          </div>
         </div>
       </div>
     </div>
@@ -94,14 +100,84 @@ function goToLogin(): void {
 </template>
 
 <style scoped>
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+
+.brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  width: 60px;
+}
+
+.brand-icon__svg {
+  height: 60px;
+  width: 60px;
+  display: block;
+}
+
+.product-brand {
+  margin: 0;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: 0.015em;
+}
+
+.brand-roster {
+  color: #ffffff;
+}
+
+.brand-theory {
+  color: #0541ab;
+}
+
+.parent-brand {
+  margin: 0.35rem 0 0;
+  font-size: clamp(0.85rem, 1.4vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.product-brand sup,
+.parent-brand sup {
+  position: relative;
+  top: -0.2em;
+  font-size: 0.48em;
+}
+
 .forgot-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
   background-color: #b66e00;
   color: #ffffff;
 }
 
+.forgot-container {
+  width: min(92vw, 1100px);
+}
+
 .forgot-card {
+  width: 100%;
+  padding: 1.2em 2rem 2rem;
   background-color: #b66e00;
-  border-color: rgba(255, 255, 255, 0.65);
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-radius: 1rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.3);
+}
+
+.auth-form-column {
+  width: 45%;
+  margin: 0 auto;
 }
 
 .field-group {
@@ -150,6 +226,12 @@ function goToLogin(): void {
   border-color: rgba(255, 255, 255, 0.45);
 }
 
+:deep(.p-password),
+:deep(.p-password-input),
+:deep(.p-inputtext) {
+  width: 100%;
+}
+
 .btn-primary-254290 {
   background-color: #254290 !important;
   border-color: #254290 !important;
@@ -167,5 +249,25 @@ function goToLogin(): void {
 
 .btn-outline-white:hover {
   background: rgba(255, 255, 255, 0.12) !important;
+}
+
+@media (max-width: 900px) {
+  .auth-form-column {
+    width: 70%;
+  }
+}
+
+@media (max-width: 640px) {
+  .forgot-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .forgot-card {
+    padding: 1.25rem;
+  }
+
+  .auth-form-column {
+    width: 100%;
+  }
 }
 </style>

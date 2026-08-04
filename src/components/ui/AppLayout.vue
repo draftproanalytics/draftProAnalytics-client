@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppHeader from './AppHeader.vue';
 import AppNavigation from './AppNavigation.vue';
+import AppFooter from './AppFooter.vue';
 import { RouterView } from 'vue-router';
 </script>
 
@@ -23,6 +24,7 @@ import { RouterView } from 'vue-router';
         <RouterView />
       </main>
     </div>
+    <AppFooter />
   </div>
 </template>
 

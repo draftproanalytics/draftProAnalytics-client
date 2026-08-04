@@ -1,4 +1,5 @@
-<!-- src/modules/auth/presentation/views/RegisterView.vue -->
+<!-- DraftProAnalytics™ | Copyright © 2025-2026 Darryl Thompson. All rights reserved. -->
+<!-- See LICENSE and TRADEMARKS.md. -->
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -63,19 +64,24 @@ function goToLogin(): void {
 </script>
 
 <template>
-  <div class="register-page min-h-screen flex items-center justify-center px-4">
-    <div class="w-full max-w-md">
-      <div class="register-card card rounded-2xl shadow-xl border p-6 sm:p-8">
+  <div class="register-page">
+    <div class="register-container">
+      <div class="register-card">
         <div class="mb-6 text-center">
-          <h2 class="text-2xl font-semibold">
+          <div class="auth-brand" aria-label="RosterTheory by DraftProAnalytics">
+            <p class="product-brand"><span class="brand-roster">Roster</span><span class="brand-theory">Theory<sup>™</sup></span></p>
+            <p class="parent-brand">by DraftProAnalytics<sup>™</sup></p>
+          </div>
+          <h2 class="mt-3 text-2xl font-semibold">
             Create account
           </h2>
           <p class="mt-1 text-sm">
-            Create your Sports Management account
+            Create your NFL draft analytics account
           </p>
         </div>
 
-        <div class="field-group">
+        <div class="auth-form-column">
+          <div class="field-group">
           <div class="mb-4 space-y-3">
             <button type="button" class="social-btn w-full" @click="onGoogleSignUp">
               <span class="social-icon pi pi-google" />
@@ -157,11 +163,15 @@ function goToLogin(): void {
               @click="goToLogin"
             />
           </form>
-        </div>
+          </div>
 
-        <p class="mt-5 text-center text-sm">
+          <p class="mt-5 text-center text-sm">
           Already have an account?
           <RouterLink to="/login" class="link-small">Sign in</RouterLink>
+          </p>
+        </div>
+        <p class="ownership-notice">
+          DraftProAnalytics™ · Copyright © 2025-2026 Darryl Thompson. All rights reserved.
         </p>
       </div>
     </div>
@@ -169,14 +179,99 @@ function goToLogin(): void {
 </template>
 
 <style scoped>
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  width: 60px;
+}
+
+.brand-icon__svg {
+  height: 60px;
+  width: 60px;
+  display: block;
+}
+
+.product-brand {
+  margin: 0;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: 0.015em;
+}
+
+.brand-roster {
+  color: #ffffff;
+}
+
+.brand-theory {
+  color: #0541ab;
+}
+
+.parent-brand {
+  margin: 0.35rem 0 0;
+  font-size: clamp(0.85rem, 1.4vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.product-brand sup,
+.parent-brand sup {
+  position: relative;
+  top: -0.2em;
+  font-size: 0.48em;
+}
+
 .register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
   background-color: #b66e00;
   color: #ffffff;
 }
 
+.register-container {
+  width: min(92vw, 1100px);
+}
+
 .register-card {
+  width: 100%;
+  padding: 1.2em 2rem 2rem;
   background-color: #b66e00;
-  border-color: rgba(255, 255, 255, 0.65);
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-radius: 1rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.3);
+}
+
+.auth-form-column {
+  width: 45%;
+  margin: 0 auto;
+}
+
+.brand-name {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.ownership-notice {
+  margin: 0.9rem 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .field-group {
@@ -225,6 +320,12 @@ function goToLogin(): void {
   border-color: rgba(255, 255, 255, 0.45);
 }
 
+:deep(.p-password),
+:deep(.p-password-input),
+:deep(.p-inputtext) {
+  width: 100%;
+}
+
 .btn-primary-254290 {
   background-color: #254290 !important;
   border-color: #254290 !important;
@@ -243,7 +344,6 @@ function goToLogin(): void {
 .btn-outline-white:hover {
   background: rgba(255, 255, 255, 0.12) !important;
 }
-</style>
 .divider {
   display: flex;
   align-items: center;
@@ -283,3 +383,24 @@ function goToLogin(): void {
   font-size: 1rem;
   line-height: 1;
 }
+
+@media (max-width: 900px) {
+  .auth-form-column {
+    width: 70%;
+  }
+}
+
+@media (max-width: 640px) {
+  .register-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .register-card {
+    padding: 1.25rem;
+  }
+
+  .auth-form-column {
+    width: 100%;
+  }
+}
+</style>

@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import AppHeader from '@/components/ui/AppHeader.vue'
 import AppNavigation from '@/components/ui/AppNavigation.vue'
+import AppFooter from '@/components/ui/AppFooter.vue'
 import '@/assets/css/theme-nfl-fan.css'
 </script>
 
@@ -14,6 +15,7 @@ import '@/assets/css/theme-nfl-fan.css'
         <RouterView />
       </main>
     </div>
+    <AppFooter />
   </div>
 </template>
 
