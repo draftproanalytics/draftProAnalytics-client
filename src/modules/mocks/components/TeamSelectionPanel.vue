@@ -40,11 +40,7 @@
         :class="['team-card', { selected: isSelected(team.id) }]"
         @click="toggleTeam(team.id)"
       >
-        <img 
-          :src="team.logoUrl" 
-          :alt="team.name"
-          class="team-logo"
-        />
+        
         <span class="team-abbr">{{ team.abbreviation }}</span>
       </div>
     </div>

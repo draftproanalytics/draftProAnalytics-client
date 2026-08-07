@@ -36,9 +36,6 @@ const deletePlayer = async (id: number) => {
     await playerStore.remove(id)
   }
 }
-const getNflLogo = (): string => {
-  return `../../images/NFLogo.jpeg`
-}
 </script>
 
 <template>

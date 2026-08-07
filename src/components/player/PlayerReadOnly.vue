@@ -132,11 +132,7 @@ watch(() => player.value?.id, loadRelationships)
             <Column header="Team" sortable>
               <template #body="{ data }">
                 <div class="team-cell">
-                  <img
-                    class="team-logo"
-                    :src="teamLogo(data)"
-                    :alt="`${teamDisplayName(data)} logo`"
-                  />
+                  
                   <span>{{ teamDisplayName(data) }}</span>
                 </div>
               </template>

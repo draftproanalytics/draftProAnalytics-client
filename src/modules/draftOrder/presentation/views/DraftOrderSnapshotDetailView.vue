@@ -163,11 +163,7 @@ onMounted(async () => {
               <Column header="Team" style="width: 260px">
                 <template #body="{ data }">
                   <div class="flex align-items-center gap-2" :data-team-id="(data as DraftOrderEntryDto).teamId">
-                    <img
-                      :src="getEntryLogoUrl(data as DraftOrderEntryDto)"
-                      class="team-icon"
-                      :alt="(data as DraftOrderEntryDto).team.name"
-                    />
+                    
                     <span class="team-name">&nbsp;&nbsp;{{ (data as DraftOrderEntryDto).team.name }}</span>
                   </div>
                 </template>

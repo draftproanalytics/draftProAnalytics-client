@@ -24,7 +24,7 @@ const props = defineProps<{
       <span class="seed" aria-label="Seed">{{ props.team.seed ?? '—' }}</span>
 
       <!-- logo -->
-      <img class="logo" :src="props.team.logoUrl" :alt="props.team.name" loading="lazy" />
+      
 
       <!-- W/L record -->
       <span class="record" aria-label="Record">{{ props.team.record ?? '—' }}</span>

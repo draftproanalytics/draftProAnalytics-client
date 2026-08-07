@@ -176,12 +176,7 @@ watch(
         <div class="matchup">
           <article class="team team--away" :class="{ champion: details.awayTeam.winner }">
             <div class="team-logo-shell">
-              <img
-                v-if="awayLogoUrl"
-                :src="awayLogoUrl"
-                :alt="`${details.awayTeam.displayName} logo`"
-                @error="markAwayLogoFailed"
-              />
+              
               <span v-else class="logo-fallback">{{ details.awayTeam.abbreviation }}</span>
             </div>
             <div class="team-copy">
@@ -200,12 +195,7 @@ watch(
               <span>{{ displayHomeRecord }}</span>
             </div>
             <div class="team-logo-shell">
-              <img
-                v-if="homeLogoUrl"
-                :src="homeLogoUrl"
-                :alt="`${details.homeTeam.displayName} logo`"
-                @error="markHomeLogoFailed"
-              />
+              
               <span v-else class="logo-fallback">{{ details.homeTeam.abbreviation }}</span>
             </div>
           </article>

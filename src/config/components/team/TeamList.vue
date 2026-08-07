@@ -76,9 +76,6 @@ const deleteTeam = async (id: number) => {
     await teamStore.fetchAll(backendPage.value, rowsPerPage.value, true)
   }
 }
-const getNflLogo = (): string => {
-  return `../../images/NFLogo.jpeg`
-}
 </script>
 
 <template>

@@ -182,13 +182,7 @@ const createRosterPlayer = () => {
 <template>
   <Card v-if="team" class="team-details bg-team-primary text-team-accent">
     <template #title>
-      <img
-        v-if="getTeamLogo(team) && !logoLoadFailed"
-        :src="getTeamLogo(team)"
-        alt=""
-        class="header-logo"
-        @error="handleLogoError"
-      />
+      
       {{ team.name }}
     </template>
     <template #subtitle style="background-color: #054DBD;">
@@ -200,13 +194,7 @@ const createRosterPlayer = () => {
         <div class="info-section">
           <div class="info-row">
             <h3 class="team-name-with-logo">
-              <img
-                v-if="getTeamLogo(team) && !logoLoadFailed"
-                :src="getTeamLogo(team)"
-                alt=""
-                class="inline-logo"
-                @error="handleLogoError"
-              />
+              
               {{ team.name }}
             </h3>
           </div>

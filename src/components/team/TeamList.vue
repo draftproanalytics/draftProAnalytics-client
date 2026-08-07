@@ -154,12 +154,7 @@ const getTeamLogo = (team: TeamRef | null | undefined): TeamLogoInfo => {
       <Column field="name" header="Team Name" sortable>
         <template #body="{ data }">
           <div class="team-name-cell">
-            <img
-              v-if="getTeamLogo(data).logoUrl"
-              :src="getTeamLogo(data).logoUrl"
-              alt=""
-              class="team-logo"
-            />
+            
             <span>{{ data.name }}</span>
           </div>
         </template>

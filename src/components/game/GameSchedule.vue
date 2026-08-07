@@ -1,7 +1,7 @@
 <template>
   <div class="pgHeader">
     <div class="team">
-      <img v-if="selectedTeamObject" :src="getTeamShortNameAndLogo(selectedTeamObject).logoPath" class="team-logo" />
+      
       <span v-if="selectedTeamObject">
         {{ getTeamShortNameAndLogo(selectedTeamObject).fullName }}&nbsp;Season Schedule
       </span>
@@ -96,12 +96,7 @@
                 <span class="checkmark-placeholder">
                   <i v-if="isWinner(data, 'away')" class="pi pi-check winner-check"></i>
                 </span>
-                <img
-                  v-if="data.awayTeam"
-                  :src="getTeamLogo(data.awayTeam)"
-                  class="team-icon"
-                  :alt="getTeamShortName(data.awayTeam)"
-                />
+                
                 <span class="team-name">{{ getTeamShortName(data.awayTeam) }}</span>
               </div>
 
@@ -110,12 +105,7 @@
               <!-- Home team -->
               <div class="team-display">
                 <span class="team-name">{{ getTeamShortName(data.homeTeam) }}</span>
-                <img
-                  v-if="data.homeTeam"
-                  :src="getTeamLogo(data.homeTeam)"
-                  class="team-icon"
-                  :alt="getTeamShortName(data.homeTeam)"
-                />
+                
                 <span class="checkmark-placeholder">
                   <i v-if="isWinner(data, 'home')" class="pi pi-check winner-check"></i>
                 </span>
@@ -480,19 +470,6 @@ const getTeamShortNameAndLogo = (
   return { fullName: team.name, logoPath: info.logoUrl }
 }
 
-function getNflLogo() { return new URL('../../images/NFLogo.jpeg', import.meta.url).href }
-
-const getStatusClass = (status: string) => {
-  const s = (status || 'scheduled').toLowerCase()
-  switch (s) {
-    case 'completed':
-    case 'final': return 'status-completed'
-    case 'in_progress': return 'status-in-progress'
-    case 'postponed': return 'status-postponed'
-    case 'cancelled': return 'status-cancelled'
-    default: return 'status-scheduled'
-  }
-}
 
 // initial load (league by year so the page isn't empty)
 onMounted(async () => {

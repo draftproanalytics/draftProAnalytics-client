@@ -44,12 +44,7 @@
           v-if="data.oppTeamScore > data.teamScore"
           class="pi pi-check-circle text-green-500 mr-1"
         ></i>
-        <img
-          v-if="getOpponentColors(data.oppTeamId)"
-          :src="`/images/${getOpponentName(data.oppTeamId).split(' ').pop()}.avif`"
-          :alt="getOpponentName(data.oppTeamId)"
-          class="inline-logo"
-        />
+        
         <span class="ml-1">{{ getOpponentName(data.oppTeamId) }}</span>
       </div>
 
@@ -58,12 +53,7 @@
       <!-- Home team (current team) -->
       <div class="team flex items-center">
         <span>{{ currentTeam?.name }}</span>
-        <img
-          v-if="currentTeam"
-          :src="`/images/${currentTeam.conference.toLowerCase()}/${currentTeam.name.split(' ').pop()}.avif`"
-          :alt="currentTeam.name"
-          class="inline-logo ml-1"
-        />
+        
         <i
           v-if="data.teamScore > data.oppTeamScore"
           class="pi pi-check-circle text-green-500 ml-1"

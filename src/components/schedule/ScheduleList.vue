@@ -38,13 +38,13 @@
         <template #body="{ data }">
           <div class="matchup">
             <span class="team">
-              <img :src="getTeamLogo(data.awayTeam)" :alt="data.awayTeam.name" class="inline-logo" />
+              
               {{ data.awayTeam?.name || 'TBD' }}
             </span>
             <span class="mx-1">@</span>
             <span class="team">
               <div v-if="data.homeTeam">
-                <img :src="getTeamLogo(data.homeTeam)" :alt="data.homeTeam.name" class="inline-logo" />
+                
               </div>
               {{ data.homeTeam?.name || 'TBD' }}
             </span>

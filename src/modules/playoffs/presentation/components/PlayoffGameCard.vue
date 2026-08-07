@@ -77,12 +77,7 @@ const isAwayWinner = computed<boolean>(
     <div class="team-row" :class="{ 'team-row--winner': isHomeWinner }">
       <div class="team-seed" v-if="game.homeSeed != null">#{{ game.homeSeed }}</div>
 
-      <img
-        v-if="homeLogoInfo?.logoUrl"
-        :src="homeLogoInfo.logoUrl"
-        alt=""
-        class="team-logo"
-      />
+      
 
       <div class="team-name-score">
         <div class="team-text">
@@ -102,12 +97,7 @@ const isAwayWinner = computed<boolean>(
     <div class="team-row" :class="{ 'team-row--winner': isAwayWinner }">
       <div class="team-seed" v-if="game.awaySeed != null">#{{ game.awaySeed }}</div>
 
-      <img
-        v-if="awayLogoInfo?.logoUrl"
-        :src="awayLogoInfo.logoUrl"
-        alt=""
-        class="team-logo"
-      />
+      
 
       <div class="team-name-score">
         <div class="team-text">

@@ -7,8 +7,7 @@
     </div>
 
     <div class="team-logo">
-      <img v-if="team.logoUrl && !imageError" :src="team.logoUrl" :alt="`${team.city} ${team.name} logo`"
-        class="team-logo-img" @error="onImageError" />
+      
       <div v-else class="team-logo-fallback" :style="{ backgroundColor: team.color }">
         {{ team.code }}
       </div>

@@ -170,7 +170,7 @@ onMounted(async () => {
 
           <div class="hero-right">
             <div class="team-chip">
-              <img v-if="selectedTeamLogo" :src="selectedTeamLogo" class="team-logo" alt="Team logo" />
+              
               <div v-else class="team-logo team-logo--empty">🏈</div>
               <div class="team-chip-text">
                 <div class="team-chip-label">Your Team</div>
@@ -228,8 +228,7 @@ onMounted(async () => {
                 <!-- selected value -->
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="team-opt">
-                    <img
-                      :src="teamLogoUrl(teams.find(t => t.id === slotProps.value) ?? null)"
+                     t.id === slotProps.value) ?? null)"
                       class="team-opt-logo"
                       alt="logo"
                     />
@@ -243,7 +242,7 @@ onMounted(async () => {
                 <!-- dropdown rows -->
                 <template #option="slotProps">
                   <div class="team-opt">
-                    <img :src="teamLogoUrl(slotProps.option)" class="team-opt-logo" alt="logo" />
+                    
                     <div class="team-opt-text">
                       <div class="team-opt-name">{{ slotProps.option.name }}</div>
                       <div class="team-opt-sub">
@@ -344,7 +343,7 @@ onMounted(async () => {
             <Divider />
 
             <div class="fineprint">
-              Logos load from <code>/public/logos/afc</code> and <code>/public/logos/nfc</code>.
+              
               If a logo doesn’t appear, verify the filename matches the team short name used by your helper.
             </div>
           </div>
