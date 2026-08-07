@@ -245,8 +245,7 @@ const getStatusClass = (status: string | undefined) => {
           <div class="matchup-cell">
             <!-- Away Team -->
             <div class="team away-team" :class="{ 'winning-team': isWinningScore(data.awayScore, data.homeScore) }">
-              <img v-if="data.awayTeam" :src="getTeamShortNameAndLogo(data.awayTeam).logoUrl"
-                :alt="getTeamShortNameAndLogo(data.awayTeam).shortName" class="team-logo" />
+              
               <span>{{ getTeamShortNameAndLogo(data.awayTeam).shortName }}</span>
             </div>
 
@@ -254,8 +253,7 @@ const getStatusClass = (status: string | undefined) => {
 
             <!-- Home Team -->
             <div class="team home-team" :class="{ 'winning-team': isWinningScore(data.homeScore, data.awayScore) }">
-              <img v-if="data.homeTeam" :src="getTeamShortNameAndLogo(data.homeTeam).logoUrl"
-                :alt="getTeamShortNameAndLogo(data.homeTeam).shortName" class="team-logo" />
+              
               <span>{{ getTeamShortNameAndLogo(data.homeTeam).shortName }}</span>
             </div>
           </div>

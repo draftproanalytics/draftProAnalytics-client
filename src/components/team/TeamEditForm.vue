@@ -119,12 +119,7 @@ const onCancel = () => {
     <template #subtitle v-if="team">
       <div class="info-row">
         <h3 class="team-name-with-logo">
-          <img
-            v-if="getTeamLogo(team).logoUrl"
-            :src="getTeamLogo(team).logoUrl"
-            alt=""
-            class="inline-logo"
-          />
+          
           {{ team.name }}
         </h3>
       </div>

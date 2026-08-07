@@ -98,7 +98,7 @@ const getWeekDisplay = computed(() => {
         <div class="matchup-header">
           <div class="team-info">
             <h3 class="team-name-with-logo">
-              <img :src="getTeamLogo(game.awayTeam)" :alt="game.awayTeam.name" class="inline-logo" />
+              
               {{ game.awayTeam.name }}
             </h3>
             <p class="team-location">{{ game.awayTeam.city }}, {{ game.awayTeam.state }}</p>
@@ -121,7 +121,7 @@ const getWeekDisplay = computed(() => {
           <div class="team-info">
 
             <h3 class="team-name-with-logo">
-              <img :src="getTeamLogo(game.homeTeam)" :alt="game.homeTeam.name" class="inline-logo" />
+              
               {{ game.homeTeam.name }}
             </h3>
             <p class="team-location">{{ game.homeTeam.city }}, {{ game.homeTeam.state }}</p>

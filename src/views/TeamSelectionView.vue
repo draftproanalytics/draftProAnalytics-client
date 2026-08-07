@@ -27,12 +27,7 @@
               <template #header>
                 <div class="tab-header">
                   <div class="tab-logo">
-                    <img 
-                      v-if="conference.logoUrl"
-                      :src="conference.logoUrl" 
-                      :alt="`${conference.abbreviation} logo`"
-                      class="tab-logo-img"
-                    />
+                    
                     <div v-else class="tab-logo-fallback">{{ conference.abbreviation }}</div>
                   </div>
                   <div class="tab-info">

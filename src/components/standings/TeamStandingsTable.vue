@@ -13,11 +13,7 @@
             <Column field="teamName" header="Team" sortable>
               <template #body="{ data }">
                 <div class="team-cell">
-                  <img
-                    class="team-logo"
-                    :src="teamLogo(data as StandingsRow)"
-                    :alt="`${data.teamName ?? data.abbreviation ?? 'Team'} logo`"
-                  />
+                  
                   <span>{{ data.teamName ?? data.abbreviation }}</span>
                 </div>
               </template>

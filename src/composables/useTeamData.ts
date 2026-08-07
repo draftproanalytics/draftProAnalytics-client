@@ -71,7 +71,7 @@ export function useTeamData(options: { enableLogos?: boolean } = {}) {
       const conferenceCode = conference.toLowerCase() // "afc" or "nfc"
       const lastWordOfTeamName = teamImageMap[code as keyof typeof teamImageMap]
       // Use public folder path for Vite
-      team.logoUrl = `/images/${conferenceCode}/${lastWordOfTeamName}`
+      team.logoUrl = ''
     }
     
     return team
@@ -146,7 +146,7 @@ export function useTeamData(options: { enableLogos?: boolean } = {}) {
         name: 'American Football Conference',
         abbreviation: 'AFC' as const,
         color: '#FF0000',
-        logoUrl: enableLogos ? '/images/afc-logo.avif' : undefined,
+        logoUrl: enableLogos ? '' : undefined,
         teams: afcTeams,
         divisions: createDivisions(afcTeams)
       },
@@ -154,7 +154,7 @@ export function useTeamData(options: { enableLogos?: boolean } = {}) {
         name: 'National Football Conference',
         abbreviation: 'NFC' as const,
         color: '#0000FF',
-        logoUrl: enableLogos ? '/images/nfc-logo.avif' : undefined,
+        logoUrl: enableLogos ? '' : undefined,
         teams: nfcTeams,
         divisions: createDivisions(nfcTeams)
       }

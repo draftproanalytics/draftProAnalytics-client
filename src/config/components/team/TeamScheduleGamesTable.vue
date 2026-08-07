@@ -157,22 +157,12 @@ onMounted(() => {
           <template #body="{ data }">
             <div class="matchup-cell">
               <div class="team">
-                <img
-                  v-if="data.awayTeam"
-                  :src="getTeamShortNameAndLogo(data.awayTeam).logoPath"
-                  :alt="getTeamShortNameAndLogo(data.awayTeam).shortName"
-                  class="team-logo"
-                />
+                
                 <span>{{ getTeamShortNameAndLogo(data.awayTeam).shortName }}</span>
               </div>
               <span class="at-symbol">@</span>
               <div class="team">
-                <img
-                  v-if="data.homeTeam"
-                  :src="getTeamShortNameAndLogo(data.homeTeam).logoPath"
-                  :alt="getTeamShortNameAndLogo(data.homeTeam).shortName"
-                  class="team-logo"
-                />
+                
                 <span>{{ getTeamShortNameAndLogo(data.homeTeam).shortName }}</span>
               </div>
             </div>

@@ -193,12 +193,7 @@ onMounted(loadResults)
       <Column header="Team" sortable sort-field="team.name">
         <template #body="{ data }">
           <div class="team-cell">
-            <img
-              v-if="getPostSeasonTeamLogo(data.team).logoUrl"
-              :src="getPostSeasonTeamLogo(data.team).logoUrl"
-              :alt="`${data.team?.name ?? 'Team'} logo`"
-              class="team-logo"
-            />
+            
             <span>{{ data.team?.name || `Team ${data.teamId ?? '—'}` }}</span>
           </div>
         </template>

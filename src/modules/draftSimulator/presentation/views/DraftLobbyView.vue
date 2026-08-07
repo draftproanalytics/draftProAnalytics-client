@@ -211,7 +211,7 @@ function handleModeChange(_m: DraftMode): void {
                     :class="{ active: t.id === selectedTeamId }"
                     @click="selectTeam(t.id)"
                   >
-                    <img v-if="teamLogoUrl(t)" class="team-logo" :src="teamLogoUrl(t)" :alt="t.name" />
+                    
                     <div class="team-text">
                       <div class="team-abbr">{{ t.abbreviation ?? '—' }}</div>
                       <div class="team-name">{{ t.name }}</div>
@@ -230,7 +230,7 @@ function handleModeChange(_m: DraftMode): void {
                     :class="{ active: t.id === selectedTeamId }"
                     @click="selectTeam(t.id)"
                   >
-                    <img v-if="teamLogoUrl(t)" class="team-logo" :src="teamLogoUrl(t)" :alt="t.name" />
+                    
                     <div class="team-text">
                       <div class="team-abbr">{{ t.abbreviation ?? '—' }}</div>
                       <div class="team-name">{{ t.name }}</div>
@@ -319,12 +319,7 @@ function handleModeChange(_m: DraftMode): void {
               <div class="label">Selected team</div>
 
               <div v-if="selectedTeam" class="team-pill">
-                <img
-                  v-if="teamLogoUrl(selectedTeam)"
-                  class="pill-logo"
-                  :src="teamLogoUrl(selectedTeam)"
-                  :alt="selectedTeam.name"
-                />
+                
                 <div>
                   <div class="pill-name">{{ selectedTeam.name }}</div>
                   <div class="pill-sub">
@@ -349,7 +344,7 @@ function handleModeChange(_m: DraftMode): void {
                 <div class="hint">
                   <div class="hint-title">Logos</div>
                   <div class="hint-sub">
-                    Loaded from <code>/public/logos/afc</code> and <code>/public/logos/nfc</code>.
+                    Team artwork is not bundled.
                   </div>
                 </div>
               </div>

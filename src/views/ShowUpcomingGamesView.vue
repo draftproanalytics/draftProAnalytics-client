@@ -108,7 +108,7 @@ onMounted(() => {
           >
             <!-- AWAY TEAM -->
             <div class="team-horizontal">
-              <img :src="data.awayLogo" class="team-logo" />
+              
               <span :class="['team-name', data.awayWinner ? 'winner-text' : 'loser-text']">
                 {{ data.awayTeamName }}
                 <span class="score" v-if="data.awayScore !== null">({{ data.awayScore }})</span>
@@ -120,7 +120,7 @@ onMounted(() => {
 
             <!-- HOME TEAM -->
             <div class="team-horizontal">
-              <img :src="data.homeLogo" class="team-logo" />
+              
               <span :class="['team-name', data.homeWinner ? 'winner-text' : 'loser-text']">
                 {{ data.homeTeamName }}
                 <span class="score" v-if="data.homeScore !== null">({{ data.homeScore }})</span>

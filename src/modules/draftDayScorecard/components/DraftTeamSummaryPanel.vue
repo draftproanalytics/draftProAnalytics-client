@@ -26,12 +26,7 @@ function initials(): string {
     <template #content>
       <section class="summary-content">
         <div class="team-identity">
-          <Avatar
-            v-if="props.reportCard.teamLogoUrl"
-            :image="props.reportCard.teamLogoUrl"
-            size="xlarge"
-            shape="circle"
-          />
+          
           <Avatar v-else :label="initials()" size="xlarge" shape="circle" />
 
           <div>
