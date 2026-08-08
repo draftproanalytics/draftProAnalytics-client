@@ -4,7 +4,6 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import { useThemeStore } from '@/stores/theme.store'
-import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
 
 import Card from 'primevue/card'
 import Button from 'primevue/button'
@@ -90,14 +89,6 @@ const selectedTeam = computed<TeamOption | null>(() => {
   return teams.value.find(t => t.id === id) ?? null
 })
 
-function teamLogoUrl(team: TeamOption | null): string {
-  if (!team?.name || !team.conference) return ''
-  const ref: TeamRef = { name: team.name, conference: team.conference }
-  const info = getTeamLogoInfo(ref)
-  return info.logoUrl
-}
-
-const selectedTeamLogo = computed(() => teamLogoUrl(selectedTeam.value))
 const selectedTeamLabel = computed(() => {
   const t = selectedTeam.value
   if (!t) return 'Select a team'
@@ -171,7 +162,7 @@ onMounted(async () => {
           <div class="hero-right">
             <div class="team-chip">
               
-              <div v-else class="team-logo team-logo--empty">🏈</div>
+              <div class="team-logo team-logo--empty">🏈</div>
               <div class="team-chip-text">
                 <div class="team-chip-label">Your Team</div>
                 <div class="team-chip-value">{{ selectedTeamLabel }}</div>
@@ -228,10 +219,6 @@ onMounted(async () => {
                 <!-- selected value -->
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="team-opt">
-                     t.id === slotProps.value) ?? null)"
-                      class="team-opt-logo"
-                      alt="logo"
-                    />
                     <span class="team-opt-text">
                       {{ (teams.find(t => t.id === slotProps.value)?.abbreviation ?? teams.find(t => t.id === slotProps.value)?.name) }}
                     </span>
@@ -343,8 +330,7 @@ onMounted(async () => {
             <Divider />
 
             <div class="fineprint">
-              
-              If a logo doesn’t appear, verify the filename matches the team short name used by your helper.
+              Team abbreviations are shown instead of trademarked team artwork.
             </div>
           </div>
         </template>

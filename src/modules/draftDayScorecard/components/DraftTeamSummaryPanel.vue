@@ -26,9 +26,7 @@ function initials(): string {
     <template #content>
       <section class="summary-content">
         <div class="team-identity">
-          
-          <Avatar v-else :label="initials()" size="xlarge" shape="circle" />
-
+      
           <div>
             <p class="eyebrow">{{ props.reportCard.draftYear }} NFL Draft Report Card</p>
             <h1>{{ props.reportCard.teamName }}</h1>
