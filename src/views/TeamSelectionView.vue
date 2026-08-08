@@ -28,7 +28,7 @@
                 <div class="tab-header">
                   <div class="tab-logo">
                     
-                    <div v-else class="tab-logo-fallback">{{ conference.abbreviation }}</div>
+                    <div class="tab-logo-fallback">{{ conference.abbreviation }}</div>
                   </div>
                   <div class="tab-info">
                     <span class="tab-name">{{ conference.abbreviation }}</span>

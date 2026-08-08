@@ -6,7 +6,6 @@ import Message from 'primevue/message'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import { fetchPlayoffGameDetails } from '@/modules/playoffs/infrastructure/playoffGameDetailsApi'
-import { resolveTeamLogo } from '@/util/resolveTeamLogo'
 import type {
   PlayoffGameDetailsDto,
   PlayoffGamePlayDto,
@@ -27,8 +26,6 @@ const emit = defineEmits<{
 const details = ref<PlayoffGameDetailsDto | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
-const awayLogoFailed = ref(false)
-const homeLogoFailed = ref(false)
 
 const dialogVisible = computed({
   get: () => props.visible,
@@ -48,27 +45,6 @@ const displayHomeRecord = computed<string>(() =>
   || 'Record unavailable'
 )
 
-const awayLogoUrl = computed<string>(() => {
-  if (!details.value || awayLogoFailed.value) return ''
-  return resolveTeamLogo(details.value.awayTeam.displayName)
-    || details.value.awayTeam.logoUrl?.trim()
-    || ''
-})
-
-const homeLogoUrl = computed<string>(() => {
-  if (!details.value || homeLogoFailed.value) return ''
-  return resolveTeamLogo(details.value.homeTeam.displayName)
-    || details.value.homeTeam.logoUrl?.trim()
-    || ''
-})
-
-const markAwayLogoFailed = (): void => {
-  awayLogoFailed.value = true
-}
-
-const markHomeLogoFailed = (): void => {
-  homeLogoFailed.value = true
-}
 
 const headerEyebrow = computed(() =>
   details.value?.playoffRound ? 'NFL PLAYOFFS' : 'NFL GAME'
@@ -116,8 +92,6 @@ const load = async (): Promise<void> => {
   if (!props.visible || props.gameId === null || props.gameId <= 0) return
   loading.value = true
   error.value = null
-  awayLogoFailed.value = false
-  homeLogoFailed.value = false
   try {
     details.value = await fetchPlayoffGameDetails(props.gameId)
   } catch (caught: unknown) {
@@ -177,7 +151,7 @@ watch(
           <article class="team team--away" :class="{ champion: details.awayTeam.winner }">
             <div class="team-logo-shell">
               
-              <span v-else class="logo-fallback">{{ details.awayTeam.abbreviation }}</span>
+              <span class="logo-fallback">{{ details.awayTeam.abbreviation }}</span>
             </div>
             <div class="team-copy">
               <strong>{{ details.awayTeam.displayName }}</strong>
@@ -196,7 +170,7 @@ watch(
             </div>
             <div class="team-logo-shell">
               
-              <span v-else class="logo-fallback">{{ details.homeTeam.abbreviation }}</span>
+              <span class="logo-fallback">{{ details.homeTeam.abbreviation }}</span>
             </div>
           </article>
         </div>

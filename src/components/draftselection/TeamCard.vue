@@ -8,7 +8,7 @@
 
     <div class="team-logo">
       
-      <div v-else class="team-logo-fallback" :style="{ backgroundColor: team.color }">
+      <div class="team-logo-fallback" :style="{ backgroundColor: team.color }">
         {{ team.code }}
       </div>
     </div>
@@ -22,7 +22,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import type { Team } from '@/types/teams'
 
 interface Props {
@@ -30,18 +29,12 @@ interface Props {
   selected: boolean
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 defineEmits<{
   toggle: []
 }>()
 
-const imageError = ref(false)
-
-const onImageError = (event: Event) => {
-  console.warn(`Failed to load team logo: ${props.team.logoUrl}`)
-  imageError.value = true
-}
 </script>
 
 <style scoped>
