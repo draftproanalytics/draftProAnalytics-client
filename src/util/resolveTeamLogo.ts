@@ -1,5 +1,8 @@
-// Team logo rendering intentionally disabled.
-// DraftProAnalytics does not bundle or resolve NFL team logo artwork.
+/**
+ * @deprecated Team artwork was removed from the DPA client.
+ * Use TeamBadge + resolveTeamBadge from @/domain/team/teamBadge.
+ */
 export function resolveTeamLogo(..._teamIdentifiers: Array<string | null | undefined>): string {
   return ''
 }
+

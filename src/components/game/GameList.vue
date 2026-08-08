@@ -10,7 +10,7 @@ import Dialog from 'primevue/dialog'
 import { FilterMatchMode } from 'primevue/api'
 import GameCreateForm from '@/components/game/GameCreateForm.vue'
 import { useThemeStore } from '@/stores/theme.store'
-import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import { useAuthStore } from '@/modules/auth/application/authStore'
 import { formatScheduleWeekLabel, type ScheduleWeekValue } from '@/util/scheduleWeekLabel'
 import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue'
@@ -142,10 +142,7 @@ function asTeamRef(team: any): TeamRef | null {
   }
 }
 
-const getTeamShortNameAndLogo = (team: any) => {
-  const ref = asTeamRef(team)
-  return getTeamLogoInfo(ref)
-}
+const getTeamShortName = (team: any): string => team?.name?.trim()?.split(/\s+/).at(-1) ?? team?.abbreviation ?? 'Unknown'
 
 type GameListRow = Record<string, unknown>
 
@@ -245,16 +242,16 @@ const getStatusClass = (status: string | undefined) => {
           <div class="matchup-cell">
             <!-- Away Team -->
             <div class="team away-team" :class="{ 'winning-team': isWinningScore(data.awayScore, data.homeScore) }">
-              
-              <span>{{ getTeamShortNameAndLogo(data.awayTeam).shortName }}</span>
+              <TeamBadge v-if="data.awayTeam" :team="data.awayTeam" size="md" />
+              <span>{{ getTeamShortName(data.awayTeam) }}</span>
             </div>
 
             <span class="at-symbol">@</span>
 
             <!-- Home Team -->
             <div class="team home-team" :class="{ 'winning-team': isWinningScore(data.homeScore, data.awayScore) }">
-              
-              <span>{{ getTeamShortNameAndLogo(data.homeTeam).shortName }}</span>
+              <TeamBadge v-if="data.homeTeam" :team="data.homeTeam" size="md" />
+              <span>{{ getTeamShortName(data.homeTeam) }}</span>
             </div>
           </div>
 

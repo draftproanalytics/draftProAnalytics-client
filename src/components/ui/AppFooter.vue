@@ -11,6 +11,9 @@
       Copyright © 2025-2026 Darryl Thompson. All rights reserved.
       RosterTheory™ and DraftProAnalytics™ are claimed trademarks.
     </p>
+    <p class="footer-disclaimer">
+      DraftProAnalytics is an independent analytics product and is not affiliated with, endorsed by, or sponsored by the NFL or any NFL team.
+    </p>
   </footer>
 </template>
 
@@ -48,7 +51,8 @@
 }
 
 .footer-purpose,
-.footer-legal {
+.footer-legal,
+.footer-disclaimer {
   margin: 0.25rem 0 0;
 }
 
@@ -58,7 +62,8 @@
   font-weight: 600;
 }
 
-.footer-legal {
+.footer-legal,
+.footer-disclaimer {
   color: rgba(248, 250, 252, 0.76);
   font-size: 0.68rem;
   line-height: 1.35;

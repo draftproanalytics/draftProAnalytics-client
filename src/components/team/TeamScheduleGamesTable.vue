@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import { ref, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import { useThemeStore } from '@/stores/theme.store'
@@ -79,19 +80,13 @@ const onGameRowClick = (event: { data: { id?: unknown } }): void => {
   if (Number.isInteger(id) && id > 0) viewGame(id)
 }
 
-const getTeamShortNameAndLogo = (team: any): { shortName: string; logoPath: string } => {
-  if (team && team.name && team.conference) {
-    const parts = team.name.trim().split(' ')
-    const shortName = parts[parts.length - 1]
-    const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
-    const logoFile = `${shortName}.${fileExt}`
-    return { shortName, logoPath: `/logos/${team.conference.toLowerCase()}/${logoFile}` }
-  }
+const getTeamShortName = (team: any): string => {
+  if (team && team.name) return team.name.trim().split(/\s+/).at(-1) ?? 'Unknown'
   if (typeof team === 'number') {
     const found = themeStore.teams.find(t => Number(t.id) === team)
-    if (found) return getTeamShortNameAndLogo(found)
+    return found?.name?.trim().split(/\s+/).at(-1) ?? 'Unknown'
   }
-  return { shortName: 'Unknown', logoPath: '' }
+  return 'Unknown'
 }
 
 onMounted(() => {
@@ -158,13 +153,13 @@ onMounted(() => {
           <template #body="{ data }">
             <div class="matchup-cell">
               <div class="team">
-                
-                <span>{{ getTeamShortNameAndLogo(data.awayTeam).shortName }}</span>
+                <TeamBadge v-if="data.awayTeam" :team="data.awayTeam" size="sm" />
+                <span>{{ getTeamShortName(data.awayTeam) }}</span>
               </div>
               <span class="at-symbol">@</span>
               <div class="team">
-                
-                <span>{{ getTeamShortNameAndLogo(data.homeTeam).shortName }}</span>
+                <TeamBadge v-if="data.homeTeam" :team="data.homeTeam" size="sm" />
+                <span>{{ getTeamShortName(data.homeTeam) }}</span>
               </div>
             </div>
           </template>

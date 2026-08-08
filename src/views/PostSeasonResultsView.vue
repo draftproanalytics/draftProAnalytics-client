@@ -14,7 +14,7 @@ import {
   type PostSeasonResultRow,
   type PostSeasonTeamSummary,
 } from '@/services/postSeasonResultService'
-import { getTeamLogoInfo, type TeamLogoInfo } from '@/util/teamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import { logger } from '@/util/Logger'
 
 const currentYear = new Date().getFullYear()
@@ -84,19 +84,6 @@ function resultSeverity(row: PostSeasonResultRow): 'success' | 'danger' | 'secon
   if (row.winLose === 'W' || row.isWin) return 'success'
   if (row.winLose === 'L') return 'danger'
   return 'secondary'
-}
-
-function getPostSeasonTeamLogo(
-  team: PostSeasonTeamSummary | null | undefined,
-): TeamLogoInfo {
-  return getTeamLogoInfo(
-    team
-      ? {
-          name: team.name,
-          conference: team.conference ?? '',
-        }
-      : undefined,
-  )
 }
 
 
@@ -193,7 +180,7 @@ onMounted(loadResults)
       <Column header="Team" sortable sort-field="team.name">
         <template #body="{ data }">
           <div class="team-cell">
-            
+            <TeamBadge :name="data.team?.name" :abbreviation="data.team?.abbreviation" size="md" />
             <span>{{ data.team?.name || `Team ${data.teamId ?? '—'}` }}</span>
           </div>
         </template>

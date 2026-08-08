@@ -1,9 +1,9 @@
 <template>
   <div class="pgHeader">
     <div class="team">
-      
+      <TeamBadge v-if="selectedTeamObject" :name="selectedTeamObject.name" size="lg" />
       <span v-if="selectedTeamObject">
-        {{ getTeamShortNameAndLogo(selectedTeamObject).fullName }}&nbsp;Season Schedule
+        {{ getTeamFullName(selectedTeamObject) }}&nbsp;Season Schedule
       </span>
       <span v-else-if="selectedTeam === 'league'">
         League-wide Season Schedule
@@ -45,7 +45,7 @@
     <!-- Info -->
     <div class="info-text">
       <span class="schedule-info">
-        Select season and team to view schedule. Use Edit/Save buttons to update scores and game status.
+        Select season and team to view schedule. For live Games & Scores go to Show Upcoming Games.
       </span>
     </div>
 
@@ -68,13 +68,14 @@
         paginator
         :rows="25"
         :rowsPerPageOptions="[10, 25, 50]"
+        rowHover
+        :rowClass="() => 'game-details-row'"
+        @row-click="openGameDetails($event.data)"
       >
         <!-- Week -->
         <Column field="gameWeek" header="Week" sortable>
           <template #body="{ data }">
-            <span v-if="data.seasonType === 1">Pre {{ data.seasonType }}</span>
-            <span v-else-if="data.gameWeek">{{ data.gameWeek }}</span>
-            <span v-else>-</span>
+            <span>{{ formatScheduleWeekLabel(data.gameWeek, data.seasonType) }}</span>
           </template>
         </Column>
 
@@ -95,7 +96,7 @@
                 <span class="checkmark-placeholder">
                   <i v-if="isWinner(data, 'away')" class="pi pi-check winner-check"></i>
                 </span>
-                
+                <TeamBadge v-if="data.awayTeam" :team="data.awayTeam" size="sm" />
                 <span class="team-name">{{ getTeamShortName(data.awayTeam) }}</span>
               </div>
 
@@ -104,7 +105,7 @@
               <!-- Home team -->
               <div class="team-display">
                 <span class="team-name">{{ getTeamShortName(data.homeTeam) }}</span>
-                
+                <TeamBadge v-if="data.homeTeam" :team="data.homeTeam" size="sm" />
                 <span class="checkmark-placeholder">
                   <i v-if="isWinner(data, 'home')" class="pi pi-check winner-check"></i>
                 </span>
@@ -167,13 +168,13 @@
         <Column header="Actions" class="actions-column">
           <template #body="{ data }">
             <div class="action-buttons">
-              <button v-if="!isRowEditing(data.id)" @click="startEdit(data)" class="edit-btn-row" :disabled="isRowSaving(data.id)">
+              <button v-if="!isRowEditing(data.id)" @click.stop="startEdit(data)" class="edit-btn-row" :disabled="isRowSaving(data.id)">
                 <i class="pi pi-pencil"></i> Edit
               </button>
-              <button v-if="isRowEditing(data.id)" @click="saveScore(data)" class="save-btn-row" :disabled="isRowSaving(data.id)">
+              <button v-if="isRowEditing(data.id)" @click.stop="saveScore(data)" class="save-btn-row" :disabled="isRowSaving(data.id)">
                 <i class="pi pi-check"></i> {{ isRowSaving(data.id) ? 'Saving...' : 'Save' }}
               </button>
-              <button v-if="isRowEditing(data.id)" @click="cancelEdit(data)" class="cancel-btn-row" :disabled="isRowSaving(data.id)">
+              <button v-if="isRowEditing(data.id)" @click.stop="cancelEdit(data)" class="cancel-btn-row" :disabled="isRowSaving(data.id)">
                 <i class="pi pi-times"></i> Cancel
               </button>
             </div>
@@ -186,17 +187,31 @@
     <div v-if="!loading && !error && scheduleGames.length === 0 && selectedSeason && selectedTeam" class="message-container">
       <div class="no-data-message">No games found for the selected season and team.</div>
     </div>
+
+    <PlayoffGameDetailsDialog
+      v-model:visible="gameDetailsVisible"
+      :game-id="selectedGameId"
+      :fallback-title="selectedGameTitle"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+// src/components/game/GameSchedule.vue
 import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import { useTeamStore } from '@/stores/teamStore'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue'
 import { useToast } from 'primevue/usetoast'
 import { Team } from '@/types'
+import {
+  formatScheduleWeekLabel,
+  getScheduleWeekSortValue,
+} from '@/util/scheduleWeekLabel'
+import { getTeamShortName as getShortName } from '@/util/teamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 // accept defaults from parent (kills "extraneous attrs" warning)
 const props = defineProps<{ defaultSeason?: string | number; defaultTeam?: string }>()
@@ -213,6 +228,10 @@ const seasonYearInit = 2025
 
 const loading = ref(false)
 const error = ref('')
+
+const selectedGameId = ref<number | null>(null)
+const selectedGameTitle = ref<string | null>(null)
+const gameDetailsVisible = ref(false)
 
 const editingRows  = ref(new Set<number>())
 const savingRows   = ref(new Set<number>())
@@ -272,9 +291,9 @@ const nflTeams = ref([
   { id: '68', name: 'Cincinnati Bengals' }, { id: '69', name: 'Cleveland Browns' }, { id: '70', name: 'Dallas Cowboys' },
   { id: '72', name: 'Denver Broncos' }, { id: '71', name: 'Detroit Lions' }, { id: '73', name: 'Green Bay Packers' },
   { id: '93', name: 'Houston Texans' }, { id: '75', name: 'Indianapolis Colts' }, { id: '76', name: 'Jacksonville Jaguars' },
-  { id: '78', name: 'Kansas City Chiefs' }, { id: '79', name: 'Las Vegas Raiders' }, { id: '95', name: 'Los Angeles Chargers' },
+  { id: '78', name: 'Kansas City Chiefs' }, { id: '79', name: 'Las Vegas Raiders' }, { id: '96', name: 'Los Angeles Chargers' },
   { id: '77', name: 'Los Angeles Rams' }, { id: '94', name: 'Miami Dolphins' }, { id: '80', name: 'Minnesota Vikings' },
-  { id: '96', name: 'New England Patriots' }, { id: '92', name: 'New Orleans Saints' }, { id: '82', name: 'New York Giants' },
+  { id: '95', name: 'New England Patriots' }, { id: '92', name: 'New Orleans Saints' }, { id: '82', name: 'New York Giants' },
   { id: '83', name: 'New York Jets' }, { id: '84', name: 'Philadelphia Eagles' }, { id: '85', name: 'Pittsburgh Steelers' },
   { id: '86', name: 'San Francisco 49ers' }, { id: '87', name: 'Seattle Seahawks' }, { id: '88', name: 'Tampa Bay Buccaneers' },
   { id: '89', name: 'Tennessee Titans' }, { id: '90', name: 'Washington Commanders' }
@@ -293,7 +312,8 @@ const scheduleGames = computed(() => {
   }
 
   return games.slice().sort((a, b) => {
-    if (a.gameWeek !== b.gameWeek) return (a.gameWeek || 0) - (b.gameWeek || 0)
+    const weekSort = getScheduleWeekSortValue(a.gameWeek, a.seasonType) - getScheduleWeekSortValue(b.gameWeek, b.seasonType)
+    if (weekSort !== 0) return weekSort
     if (a.gameDate && b.gameDate) return new Date(a.gameDate).getTime() - new Date(b.gameDate).getTime()
     return 0
   })
@@ -348,6 +368,18 @@ const loadSchedule = async () => {
   }
 }
 
+const openGameDetails = (game: any): void => {
+  const gameId = Number(game?.id)
+  if (!Number.isInteger(gameId) || gameId <= 0 || isRowEditing(gameId)) return
+
+  const awayName = game?.awayTeam?.name ?? 'Away Team'
+  const homeName = game?.homeTeam?.name ?? 'Home Team'
+
+  selectedGameId.value = gameId
+  selectedGameTitle.value = `${awayName} @ ${homeName}`
+  gameDetailsVisible.value = true
+}
+
 // editing helpers
 const startEdit = (g: any) => {
   originalVals.value.set(g.id, { homeScore: g.homeScore, awayScore: g.awayScore, gameStatus: g.gameStatus })
@@ -397,21 +429,13 @@ const formatLocation = (g: any) => {
 }
 
 // matchup helpers
-const getTeamShortName = (team: any) => {
+const getTeamShortName = (team: any): string => {
   if (!team?.name) return 'TBD'
-  const parts = team.name.trim().split(' ')
-  return parts[parts.length - 1]
+  return getShortName(team.name)
 }
-const getTeamLogo = (team: any): string => {
-  if (!team?.name || !team?.conference) return ''
-  const lastWord = team.name.trim().split(' ').pop()!
-  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
-  try {
-    return new URL(`../../assets/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`, import.meta.url).href
-  } catch {
-    return ''
-  }
-}
+type GameTeam = { name: string; conference?: string }
+
+
 const isWinner = (g: any, side: 'home'|'away') => {
   if (g.homeScore == null || g.awayScore == null) return false
   if (g.homeScore === g.awayScore) return false
@@ -419,13 +443,19 @@ const isWinner = (g: any, side: 'home'|'away') => {
 }
 
 // header helpers
-const getTeamShortNameAndLogo = (team: any): { fullName: string; logoPath: string } => {
-  if (!team?.name || !team?.conference) return { fullName: 'Unknown', logoPath: '' }
-  const parts = team.name.trim().split(' ')
-  const short = parts[parts.length - 1]
-  const ext = short === 'Chargers' ? 'webp' : 'avif'
-  const logoPath = new URL(`../../assets/images/${team.conference.toLowerCase()}/${short}.${ext}`, import.meta.url).href
-  return { fullName: team.name, logoPath }
+const getTeamFullName = (team: GameTeam | null | undefined): string => team?.name ?? 'Unknown'
+
+
+const getStatusClass = (status: string) => {
+  const s = (status || 'scheduled').toLowerCase()
+  switch (s) {
+    case 'completed':
+    case 'final': return 'status-completed'
+    case 'in_progress': return 'status-in-progress'
+    case 'postponed': return 'status-postponed'
+    case 'cancelled': return 'status-cancelled'
+    default: return 'status-scheduled'
+  }
 }
 
 // initial load (league by year so the page isn't empty)
@@ -436,10 +466,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+:deep(.game-details-row) { cursor: pointer; }
 .matchup-cell { display:flex; align-items:center; gap:0.25rem; }
 .team { font-size:22pt; display:flex; align-items:center; gap:0.25rem; }
 
-.nfl-logo { width:120px; height:120px; object-fit:contain; vertical-align:bottom; }
 .team-logo { width:120px; height:120px; object-fit:contain; vertical-align:middle; }
 
 .schedule-container { width:100%; }

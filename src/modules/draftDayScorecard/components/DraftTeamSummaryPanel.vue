@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import Card from 'primevue/card'
 import Avatar from 'primevue/avatar'
 import Tag from 'primevue/tag'
@@ -26,6 +27,7 @@ function initials(): string {
     <template #content>
       <section class="summary-content">
         <div class="team-identity">
+          <TeamBadge :name="props.reportCard.teamName" :abbreviation="props.reportCard.teamAbbreviation" size="lg" />
       
           <div>
             <p class="eyebrow">{{ props.reportCard.draftYear }} NFL Draft Report Card</p>

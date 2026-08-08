@@ -18,7 +18,7 @@ import TeamNeedsPanel from './TeamNeedsPanel.vue'
 import RosterPlayerList from '@/modules/roster/presentation/components/RosterPlayerList.vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
-import { getTeamLogoInfo } from '@/util/teamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 const route = useRoute()
 const themeStore = useThemeStore()
@@ -118,35 +118,6 @@ const loadTeamStatistics = async (teamId: number, seasonYear: number) => {
   }
 }
 
-const logoLoadFailed = ref(false)
-
-const getTeamLogo = (selectedTeam: typeof team.value): string => {
-  if (!selectedTeam?.name || !selectedTeam.conference) return ''
-
-  const conferenceValue = selectedTeam.conference.trim().toLowerCase()
-  const normalizedConference =
-    conferenceValue.includes('afc') || conferenceValue.includes('american')
-      ? 'AFC'
-      : conferenceValue.includes('nfc') || conferenceValue.includes('national')
-        ? 'NFC'
-        : selectedTeam.conference
-
-  return getTeamLogoInfo({
-    name: selectedTeam.name,
-    conference: normalizedConference,
-  }).logoUrl
-}
-
-const handleLogoError = (): void => {
-  logoLoadFailed.value = true
-}
-
-watch(
-  () => team.value?.id,
-  () => {
-    logoLoadFailed.value = false
-  },
-)
 
 onMounted(async () => {
   if (route.params.teamId && typeof route.params.teamId === 'string') {
@@ -182,7 +153,7 @@ const createRosterPlayer = () => {
 <template>
   <Card v-if="team" class="team-details bg-team-primary text-team-accent">
     <template #title>
-      
+      <TeamBadge :team="team" size="lg" />
       {{ team.name }}
     </template>
     <template #subtitle style="background-color: #054DBD;">
@@ -194,7 +165,7 @@ const createRosterPlayer = () => {
         <div class="info-section">
           <div class="info-row">
             <h3 class="team-name-with-logo">
-              
+              <TeamBadge :team="team" size="sm" />
               {{ team.name }}
             </h3>
           </div>

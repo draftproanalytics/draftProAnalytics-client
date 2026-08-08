@@ -12,11 +12,8 @@ import Button from "primevue/button"
 import TimezoneSelector from "@/modules/draftOrder/presentation/components/TimezoneSelector.vue"
 import TeamNeedsPlaceholder from "@/modules/draftOrder/presentation/components/TeamNeedsPlaceholder.vue"
 
-import {
-  getTeamLogoInfo,
-  getTeamShortName as getShortName,
-  type TeamRef,
-} from "@/util/teamLogo"
+import { getTeamShortName as getShortName } from "@/util/teamLogo"
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 const store = useDraftOrderStore()
 const route = useRoute()
@@ -59,44 +56,6 @@ async function load(): Promise<void> {
   }
 }
 
-type LogoTeam = { name: string; conference?: string }
-
-const AFC = new Set([
-  "BAL","BUF","CIN","CLE","DEN","HOU","IND","JAX","KC","LV","LAC","MIA","NE","NYJ","PIT","TEN",
-])
-
-const NFC = new Set([
-  "ARI","ATL","CAR","CHI","DAL","DET","GB","LAR","MIN","NO","NYG","PHI","SEA","SF","TB","WAS",
-])
-
-function inferConferenceFromAbbr(abbr: string | null | undefined): "AFC" | "NFC" | "" {
-  const a = String(abbr ?? "").trim().toUpperCase()
-  if (AFC.has(a)) return "AFC"
-  if (NFC.has(a)) return "NFC"
-  return ""
-}
-const AFC_SHORT = new Set([
-  "Ravens","Bills","Bengals","Browns","Broncos","Texans","Colts","Jaguars",
-  "Chiefs","Raiders","Chargers","Dolphins","Patriots","Jets","Steelers","Titans",
-])
-
-const NFC_SHORT = new Set([
-  "Cardinals","Falcons","Panthers","Bears","Cowboys","Lions","Packers","Rams",
-  "Vikings","Saints","Giants","Eagles","49ers","Seahawks","Buccaneers","Commanders",
-])
-
-function inferConferenceFromTeamName(teamName: string): "AFC" | "NFC" | "" {
-  const shortName = getShortName(teamName)
-  if (AFC_SHORT.has(shortName)) return "AFC"
-  if (NFC_SHORT.has(shortName)) return "NFC"
-  return ""
-}
-
-function getEntryLogoUrl(entry: DraftOrderEntryDto): string {
-  const conference = inferConferenceFromTeamName(entry.team.name)
-  const info = getTeamLogoInfo({ name: entry.team.name, conference } as TeamRef)
-  return info.logoUrl
-}
 
 
 function getEntryShortName(entry: DraftOrderEntryDto): string {
@@ -163,7 +122,7 @@ onMounted(async () => {
               <Column header="Team" style="width: 260px">
                 <template #body="{ data }">
                   <div class="flex align-items-center gap-2" :data-team-id="(data as DraftOrderEntryDto).teamId">
-                    
+                    <TeamBadge :name="(data as DraftOrderEntryDto).team.name" size="sm" />
                     <span class="team-name">&nbsp;&nbsp;{{ (data as DraftOrderEntryDto).team.name }}</span>
                   </div>
                 </template>

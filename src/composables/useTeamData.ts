@@ -2,8 +2,7 @@
 import { computed } from 'vue'
 import type { Conference, Division, Team } from '@/types/Teams'
 
-export function useTeamData(options: { enableLogos?: boolean } = {}) {
-  const { enableLogos = true } = options
+export function useTeamData() {
 
   // Team colors mapping
   const teamColors = {
@@ -17,45 +16,6 @@ export function useTeamData(options: { enableLogos?: boolean } = {}) {
     SEA: '#002244', TB: '#D50A0A', TEN: '#0C2340', WAS: '#773141'
   }
 
-  // Team name to image mapping (using the last word of team name)
-  const teamImageMap = {
-    // AFC Teams
-    BAL: 'Ravens.avif',
-    BUF: 'Bills.avif', 
-    CIN: 'Bengals.avif',
-    CLE: 'Browns.avif',
-    DEN: 'Broncos.avif',
-    HOU: 'Texans.avif',
-    IND: 'Colts.avif',
-    JAX: 'Jaguars.avif',
-    KC: 'Chiefs.avif',
-    LAC: 'Chargers.webp', // Exception: webp format
-    LV: 'Raiders.avif',
-    MIA: 'Dolphins.avif',
-    NE: 'Patriots.avif',
-    NYJ: 'Jets.avif',
-    PIT: 'Steelers.avif',
-    TEN: 'Titans.avif',
-    
-    // NFC Teams  
-    ARI: 'Cardinals.avif',
-    ATL: 'Falcons.avif',
-    CAR: 'Panthers.avif',
-    CHI: 'Bears.avif',
-    DAL: 'Cowboys.avif',
-    DET: 'Lions.avif',
-    GB: 'Packers.avif',
-    LAR: 'Rams.avif',
-    MIN: 'Vikings.avif',
-    NO: 'Saints.avif',
-    NYG: 'Giants.avif',
-    PHI: 'Eagles.avif',
-    SEA: 'Seahawks.avif',
-    SF: '49ers.avif',
-    TB: 'Buccaneers.avif',
-    WAS: 'Washington.avif'
-  }
-
   // Helper function to create team with correct image path
   const createTeam = (code: string, name: string, city: string, conference: 'AFC' | 'NFC', division: 'East' | 'North' | 'South' | 'West'): Team => {
     const team: Team = {
@@ -66,14 +26,6 @@ export function useTeamData(options: { enableLogos?: boolean } = {}) {
       division,
       color: teamColors[code as keyof typeof teamColors]
     }
-    
-    if (enableLogos) {
-      const conferenceCode = conference.toLowerCase() // "afc" or "nfc"
-      const lastWordOfTeamName = teamImageMap[code as keyof typeof teamImageMap]
-      // Use public folder path for Vite
-      team.logoUrl = ''
-    }
-    
     return team
   }
 
@@ -146,7 +98,6 @@ export function useTeamData(options: { enableLogos?: boolean } = {}) {
         name: 'American Football Conference',
         abbreviation: 'AFC' as const,
         color: '#FF0000',
-        logoUrl: enableLogos ? '' : undefined,
         teams: afcTeams,
         divisions: createDivisions(afcTeams)
       },
@@ -154,7 +105,6 @@ export function useTeamData(options: { enableLogos?: boolean } = {}) {
         name: 'National Football Conference',
         abbreviation: 'NFC' as const,
         color: '#0000FF',
-        logoUrl: enableLogos ? '' : undefined,
         teams: nfcTeams,
         divisions: createDivisions(nfcTeams)
       }

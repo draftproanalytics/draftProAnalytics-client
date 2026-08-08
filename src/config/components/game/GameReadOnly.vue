@@ -1,4 +1,6 @@
+// src/components/game/GameReadOnly.vue
 <script setup lang="ts">
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import { computed, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import Card from 'primevue/card'
@@ -48,18 +50,6 @@ const getGameStatusSeverity = (status: string | undefined) => {
   }
 }
 
-const getTeamLogo = (team: any): string => {
-  
-  if (!team || !team.name || !team.conference) return ''
-
-  const lastWord = team.name.trim().split(' ').pop()
-  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
-
-  return new URL(
-    `../../assets/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`,
-    import.meta.url
-  ).href
-}
 
 const getGameResult = computed(() => {
   if (!game.value || game.value.homeScore === null || game.value.homeScore === undefined ||
@@ -82,8 +72,8 @@ const getGameResult = computed(() => {
 const getWeekDisplay = computed(() => {
   if (!game.value) return ''
 
-  if (game.value.seasonType === 1) {
-    return `Preseason Week ${game.value.gameWeek}`
+  if (game.value.seasonType) {
+    return `Preseason Week ${game.value.seasonType}`
   } else if (game.value.gameWeek) {
     return `Week ${game.value.gameWeek}`
   }
@@ -98,7 +88,7 @@ const getWeekDisplay = computed(() => {
         <div class="matchup-header">
           <div class="team-info">
             <h3 class="team-name-with-logo">
-              
+              <TeamBadge :team="game.awayTeam" size="lg" />
               {{ game.awayTeam.name }}
             </h3>
             <p class="team-location">{{ game.awayTeam.city }}, {{ game.awayTeam.state }}</p>
@@ -121,7 +111,7 @@ const getWeekDisplay = computed(() => {
           <div class="team-info">
 
             <h3 class="team-name-with-logo">
-              
+              <TeamBadge :team="game.homeTeam" size="lg" />
               {{ game.homeTeam.name }}
             </h3>
             <p class="team-location">{{ game.homeTeam.city }}, {{ game.homeTeam.state }}</p>
@@ -478,4 +468,43 @@ const getWeekDisplay = computed(() => {
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Match TeamReadOnly.vue Players accordion style */
+.relationships-accordion {
+  margin-top: 2rem;
+  width: 100%;
+  background-color: var(--team-primary, #054DBD); /* matches the TeamReadOnly Players section */
+  color: #FFFFFF; /* white text like player names */
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.25);
+}
+
+:deep(.p-accordion-tab) {
+  background-color: var(--team-primary, #054DBD);
+  color: #FFFFFF;
+  border: none;
+}
+
+:deep(.p-accordion-header-link) {
+  background-color: var(--team-primary, #054DBD);
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+:deep(.p-accordion-header-link:hover) {
+  background-color: #2563eb; /* hover accent like TeamReadOnly’s blue accent */
+}
+
+:deep(.p-accordion-content) {
+  background-color: var(--team-primary, #054DBD);
+  color: #FFFFFF;
+  border-top: 1px solid #2563eb;
+}
+
+.team-details .label,
+.team-details .data-value {
+  color: #FFFFFF; /* ensure all labels and values remain white inside accordions */
+}
+
 </style>

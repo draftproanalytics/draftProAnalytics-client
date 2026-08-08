@@ -4,13 +4,16 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const goHome = () => { router.push('/') }
 
+const getNflLogo = (): string => {
+  return `../../images/NFLogo.jpeg`
+}
 
 </script>
 
 <template>
   <header class="app-header" role="banner">
     <div class="header-content">
-    <div class="nfl-logo"> </div>
+    <div class="nfl-logo"> <img :src="getNflLogo()" class="inline-logo" /></div>
       <h2>       
       <h1 @click="goHome" class="app-title" tabindex="0">Sports Management System</h1>
       <div class="header-actions"><!-- actions --></div>

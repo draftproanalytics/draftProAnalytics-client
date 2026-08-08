@@ -44,7 +44,7 @@
           v-if="data.oppTeamScore > data.teamScore"
           class="pi pi-check-circle text-green-500 mr-1"
         ></i>
-        
+        <TeamBadge :name="getOpponentName(data.oppTeamId)" size="sm" />
         <span class="ml-1">{{ getOpponentName(data.oppTeamId) }}</span>
       </div>
 
@@ -53,7 +53,7 @@
       <!-- Home team (current team) -->
       <div class="team flex items-center">
         <span>{{ currentTeam?.name }}</span>
-        
+        <TeamBadge v-if="currentTeam" :team="currentTeam" size="sm" />
         <i
           v-if="data.teamScore > data.oppTeamScore"
           class="pi pi-check-circle text-green-500 ml-1"
@@ -116,6 +116,7 @@
 </template>
 
 <script setup lang="ts">
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import { onMounted, ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'

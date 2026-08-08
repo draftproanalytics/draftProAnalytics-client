@@ -16,7 +16,7 @@ import TabPanel from 'primevue/tabpanel'
 
 import { api } from '@/services/api'
 import { useThemeStore } from '@/stores/theme.store'
-import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import ModeSelector, { type DraftMode } from '@/modules/draftSimulator/presentation/components/ModeSelector.vue'
 
 type DraftSpeed = 1 | 2 | 3
@@ -109,11 +109,6 @@ const selectedTeam = computed<TeamOption | null>(() => {
   return teams.value.find(t => t.id === id) ?? null
 })
 
-function teamLogoUrl(team: TeamOption | null): string {
-  if (!team?.conference) return ''
-  const ref: TeamRef = { name: team.name, conference: team.conference }
-  return getTeamLogoInfo(ref).logoUrl
-}
 
 const filteredTeams = computed(() => {
   const q = teamSearch.value.trim().toLowerCase()
@@ -211,7 +206,7 @@ function handleModeChange(_m: DraftMode): void {
                     :class="{ active: t.id === selectedTeamId }"
                     @click="selectTeam(t.id)"
                   >
-                    
+                    <TeamBadge :name="t.name" :abbreviation="t.abbreviation" size="sm" />
                     <div class="team-text">
                       <div class="team-abbr">{{ t.abbreviation ?? '—' }}</div>
                       <div class="team-name">{{ t.name }}</div>
@@ -230,7 +225,7 @@ function handleModeChange(_m: DraftMode): void {
                     :class="{ active: t.id === selectedTeamId }"
                     @click="selectTeam(t.id)"
                   >
-                    
+                    <TeamBadge :name="t.name" :abbreviation="t.abbreviation" size="sm" />
                     <div class="team-text">
                       <div class="team-abbr">{{ t.abbreviation ?? '—' }}</div>
                       <div class="team-name">{{ t.name }}</div>
@@ -319,7 +314,7 @@ function handleModeChange(_m: DraftMode): void {
               <div class="label">Selected team</div>
 
               <div v-if="selectedTeam" class="team-pill">
-                
+                <TeamBadge :name="selectedTeam.name" :abbreviation="selectedTeam.abbreviation" size="md" />
                 <div>
                   <div class="pill-name">{{ selectedTeam.name }}</div>
                   <div class="pill-sub">
@@ -342,10 +337,8 @@ function handleModeChange(_m: DraftMode): void {
                   <div class="hint-sub">Position runs will surface in the Team Console.</div>
                 </div>
                 <div class="hint">
-                  <div class="hint-title">Logos</div>
-                  <div class="hint-sub">
-                    Team artwork is not bundled.
-                  </div>
+                  <div class="hint-title">Team badges</div>
+                  <div class="hint-sub">Neutral abbreviation badges use the shared DPA team-color mapping.</div>
                 </div>
               </div>
             </div>

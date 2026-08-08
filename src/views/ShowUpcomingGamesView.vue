@@ -6,6 +6,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers';
 import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue';
+import TeamBadge from '@/components/team/TeamBadge.vue';
 
 const controller = useUpcomingGamesController();
 const { loading, runImportScoresWeek } = controller;
@@ -108,7 +109,7 @@ onMounted(() => {
           >
             <!-- AWAY TEAM -->
             <div class="team-horizontal">
-              
+              <TeamBadge :name="data.awayTeamName" size="lg" />
               <span :class="['team-name', data.awayWinner ? 'winner-text' : 'loser-text']">
                 {{ data.awayTeamName }}
                 <span class="score" v-if="data.awayScore !== null">({{ data.awayScore }})</span>
@@ -120,7 +121,7 @@ onMounted(() => {
 
             <!-- HOME TEAM -->
             <div class="team-horizontal">
-              
+              <TeamBadge :name="data.homeTeamName" size="lg" />
               <span :class="['team-name', data.homeWinner ? 'winner-text' : 'loser-text']">
                 {{ data.homeTeamName }}
                 <span class="score" v-if="data.homeScore !== null">({{ data.homeScore }})</span>

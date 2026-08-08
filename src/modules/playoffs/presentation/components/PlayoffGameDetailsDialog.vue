@@ -6,6 +6,7 @@ import Message from 'primevue/message'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import { fetchPlayoffGameDetails } from '@/modules/playoffs/infrastructure/playoffGameDetailsApi'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import type {
   PlayoffGameDetailsDto,
   PlayoffGamePlayDto,
@@ -149,10 +150,7 @@ watch(
 
         <div class="matchup">
           <article class="team team--away" :class="{ champion: details.awayTeam.winner }">
-            <div class="team-logo-shell">
-              
-              <span class="logo-fallback">{{ details.awayTeam.abbreviation }}</span>
-            </div>
+            <div class="team-logo-shell"><TeamBadge :name="details.awayTeam.displayName" :abbreviation="details.awayTeam.abbreviation" size="xl" /></div>
             <div class="team-copy">
               <strong>{{ details.awayTeam.displayName }}</strong>
               <span>{{ displayAwayRecord }}</span>
@@ -168,10 +166,7 @@ watch(
               <strong>{{ details.homeTeam.displayName }}</strong>
               <span>{{ displayHomeRecord }}</span>
             </div>
-            <div class="team-logo-shell">
-              
-              <span class="logo-fallback">{{ details.homeTeam.abbreviation }}</span>
-            </div>
+            <div class="team-logo-shell"><TeamBadge :name="details.homeTeam.displayName" :abbreviation="details.homeTeam.abbreviation" size="xl" /></div>
           </article>
         </div>
       </section>

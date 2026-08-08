@@ -1,9 +1,9 @@
 <template>
   <div class="pgHeader">
     <div class="team">
-      
+      <TeamBadge v-if="selectedTeamObject" :name="selectedTeamObject.name" size="lg" />
       <span v-if="selectedTeamObject">
-        {{ getTeamShortNameAndLogo(selectedTeamObject).fullName }}&nbsp;Season Schedule
+        {{ getTeamFullName(selectedTeamObject) }}&nbsp;Season Schedule
       </span>
       <span v-else-if="selectedTeam === 'league'">
         League-wide Season Schedule
@@ -96,7 +96,7 @@
                 <span class="checkmark-placeholder">
                   <i v-if="isWinner(data, 'away')" class="pi pi-check winner-check"></i>
                 </span>
-                
+                <TeamBadge v-if="data.awayTeam" :team="data.awayTeam" size="sm" />
                 <span class="team-name">{{ getTeamShortName(data.awayTeam) }}</span>
               </div>
 
@@ -105,7 +105,7 @@
               <!-- Home team -->
               <div class="team-display">
                 <span class="team-name">{{ getTeamShortName(data.homeTeam) }}</span>
-                
+                <TeamBadge v-if="data.homeTeam" :team="data.homeTeam" size="sm" />
                 <span class="checkmark-placeholder">
                   <i v-if="isWinner(data, 'home')" class="pi pi-check winner-check"></i>
                 </span>
@@ -210,11 +210,8 @@ import {
   formatScheduleWeekLabel,
   getScheduleWeekSortValue,
 } from '@/util/scheduleWeekLabel'
-import {
-  getTeamLogoInfo,
-  getTeamShortName as getShortName,
-  type TeamRef,
-} from '@/util/teamLogo'
+import { getTeamShortName as getShortName } from '@/util/teamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 // accept defaults from parent (kills "extraneous attrs" warning)
 const props = defineProps<{ defaultSeason?: string | number; defaultTeam?: string }>()
@@ -438,17 +435,6 @@ const getTeamShortName = (team: any): string => {
 }
 type GameTeam = { name: string; conference?: string }
 
-const getTeamLogo = (team: GameTeam | null | undefined): string => {
-  if (!team?.name) return ''
-
-  const info = getTeamLogoInfo({
-    name: team.name,
-    conference: team.conference ?? '', // if missing, helper will return ''
-  } as TeamRef)
-
-  return info.logoUrl
-}
-
 
 const isWinner = (g: any, side: 'home'|'away') => {
   if (g.homeScore == null || g.awayScore == null) return false
@@ -457,19 +443,20 @@ const isWinner = (g: any, side: 'home'|'away') => {
 }
 
 // header helpers
-const getTeamShortNameAndLogo = (
-  team: GameTeam | null | undefined
-): { fullName: string; logoPath: string } => {
-  if (!team?.name) return { fullName: 'Unknown', logoPath: '' }
+const getTeamFullName = (team: GameTeam | null | undefined): string => team?.name ?? 'Unknown'
 
-  const info = getTeamLogoInfo({
-    name: team.name,
-    conference: team.conference ?? '',
-  } as TeamRef)
 
-  return { fullName: team.name, logoPath: info.logoUrl }
+const getStatusClass = (status: string) => {
+  const s = (status || 'scheduled').toLowerCase()
+  switch (s) {
+    case 'completed':
+    case 'final': return 'status-completed'
+    case 'in_progress': return 'status-in-progress'
+    case 'postponed': return 'status-postponed'
+    case 'cancelled': return 'status-cancelled'
+    default: return 'status-scheduled'
+  }
 }
-
 
 // initial load (league by year so the page isn't empty)
 onMounted(async () => {
@@ -483,7 +470,6 @@ onMounted(async () => {
 .matchup-cell { display:flex; align-items:center; gap:0.25rem; }
 .team { font-size:22pt; display:flex; align-items:center; gap:0.25rem; }
 
-.nfl-logo { width:120px; height:120px; object-fit:contain; vertical-align:bottom; }
 .team-logo { width:120px; height:120px; object-fit:contain; vertical-align:middle; }
 
 .schedule-container { width:100%; }

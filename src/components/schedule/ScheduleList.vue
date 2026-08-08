@@ -38,13 +38,13 @@
         <template #body="{ data }">
           <div class="matchup">
             <span class="team">
-              
+              <TeamBadge v-if="data.awayTeam" :team="data.awayTeam" size="sm" />
               {{ data.awayTeam?.name || 'TBD' }}
             </span>
             <span class="mx-1">@</span>
             <span class="team">
               <div v-if="data.homeTeam">
-                
+                <TeamBadge :team="data.homeTeam" size="sm" />
               </div>
               {{ data.homeTeam?.name || 'TBD' }}
             </span>
@@ -124,7 +124,7 @@ import TeamAwareTag from '@/components/TeamAwareTag.vue'
 import GameResultTag from '@/components/GameResultTag.vue'
 import type { Team } from '@/types/team.types'
 import { useAuthStore } from "@/modules/auth/application/authStore";
-import { getTeamLogoInfo, type TeamRef } from '@/util/teamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import { formatScheduleWeekLabel } from '@/util/scheduleWeekLabel'
 
 const auth = useAuthStore();
@@ -206,11 +206,7 @@ function asTeamRef(team: any): TeamRef | null {
   }
 }
 
-const getTeamLogo = (team: any): string => {
-  const info = getTeamLogoInfo(asTeamRef(team))
-  // alert("Logo: "+ info.logoUrl);
-  return info.logoUrl
-}
+
 const viewSchedule = (id: number) => router.push(`/schedules/${id}?mode=read`)
 const editSchedule = (id: number) => router.push(`/schedules/${id}?mode=edit`)
 const createSchedule = () => router.push('/schedules?mode=create')

@@ -1,5 +1,6 @@
 <!-- src/modules/playoffs/presentation/components/PlayoffGameCard.vue -->
 <script setup lang="ts">
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import { computed } from "vue";
 import type { PlayoffMatchup } from "../../domain/PlayoffTypes";
 import { useStandingsStore } from "@/stores/standingsStore";
@@ -24,13 +25,6 @@ const awayStanding = computed<TeamStandingDto | null>(() =>
     : null
 );
 
-const homeLogoInfo = computed(() =>
-  standingsStore.getLogoInfoByTeamId(props.game.homeTeamId)
-);
-
-const awayLogoInfo = computed(() =>
-  standingsStore.getLogoInfoByTeamId(props.game.awayTeamId)
-);
 
 const homeDisplayName = computed<string>(() =>
   standingsStore.getDisplayNameByTeamId(props.game.homeTeamId)
@@ -77,7 +71,7 @@ const isAwayWinner = computed<boolean>(
     <div class="team-row" :class="{ 'team-row--winner': isHomeWinner }">
       <div class="team-seed" v-if="game.homeSeed != null">#{{ game.homeSeed }}</div>
 
-      
+      <TeamBadge :name="homeDisplayName" size="md" />
 
       <div class="team-name-score">
         <div class="team-text">
@@ -97,7 +91,7 @@ const isAwayWinner = computed<boolean>(
     <div class="team-row" :class="{ 'team-row--winner': isAwayWinner }">
       <div class="team-seed" v-if="game.awaySeed != null">#{{ game.awaySeed }}</div>
 
-      
+      <TeamBadge :name="awayDisplayName" size="md" />
 
       <div class="team-name-score">
         <div class="team-text">

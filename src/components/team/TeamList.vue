@@ -6,7 +6,7 @@ import { useTeamStore } from '@/stores/teamStore'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
-import { getTeamLogoInfo, type TeamLogoInfo, type TeamRef } from '@/util/teamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 const teamStore = useTeamStore()
 const router = useRouter()
@@ -111,9 +111,6 @@ const deleteTeam = async (id: number) => {
     await teamStore.fetchAll(backendPage.value, rowsPerPage.value, true, sortField.value, sortOrder.value)
   }
 }
-const getTeamLogo = (team: TeamRef | null | undefined): TeamLogoInfo => {
-  return getTeamLogoInfo(team)
-}
 </script>
 
 <template>
@@ -154,7 +151,7 @@ const getTeamLogo = (team: TeamRef | null | undefined): TeamLogoInfo => {
       <Column field="name" header="Team Name" sortable>
         <template #body="{ data }">
           <div class="team-name-cell">
-            
+            <TeamBadge :team="data" size="sm" />
             <span>{{ data.name }}</span>
           </div>
         </template>

@@ -1,5 +1,6 @@
 // src/components/game/GameReadOnly.vue
 <script setup lang="ts">
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import { computed, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import Card from 'primevue/card'
@@ -49,18 +50,6 @@ const getGameStatusSeverity = (status: string | undefined) => {
   }
 }
 
-const getTeamLogo = (team: any): string => {
-  
-  if (!team || !team.name || !team.conference) return ''
-
-  const lastWord = team.name.trim().split(' ').pop()
-  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
-
-  return new URL(
-    `../../assets/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`,
-    import.meta.url
-  ).href
-}
 
 const getGameResult = computed(() => {
   if (!game.value || game.value.homeScore === null || game.value.homeScore === undefined ||
@@ -99,7 +88,7 @@ const getWeekDisplay = computed(() => {
         <div class="matchup-header">
           <div class="team-info">
             <h3 class="team-name-with-logo">
-              
+              <TeamBadge :team="game.awayTeam" size="lg" />
               {{ game.awayTeam.name }}
             </h3>
             <p class="team-location">{{ game.awayTeam.city }}, {{ game.awayTeam.state }}</p>
@@ -122,7 +111,7 @@ const getWeekDisplay = computed(() => {
           <div class="team-info">
 
             <h3 class="team-name-with-logo">
-              
+              <TeamBadge :team="game.homeTeam" size="lg" />
               {{ game.homeTeam.name }}
             </h3>
             <p class="team-location">{{ game.homeTeam.city }}, {{ game.homeTeam.state }}</p>

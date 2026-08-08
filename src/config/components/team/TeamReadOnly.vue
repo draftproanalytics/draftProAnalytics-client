@@ -5,31 +5,38 @@ import { useTeamStore } from '@/stores/teamStore'
 import Card from 'primevue/card'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import Button from 'primevue/button'
+import Dropdown from 'primevue/dropdown'
+import Message from 'primevue/message'
 import { useRouter } from 'vue-router'
-import { apiService } from '@/services/api'
 import { gameService } from '@/services/gameService'
-import type { Player, PaginatedResponse } from '@/types'
 import type { TeamStatistics } from '@/services/gameService'
 import TeamDraftPickTable from './TeamDraftPickTable.vue'
 import TeamScheduleGamesTable from './TeamScheduleGamesTable.vue'
+import TeamPlayoffResultsTable from './TeamPlayoffResultsTable.vue'
+import TeamNeedsPanel from './TeamNeedsPanel.vue'
+import RosterPlayerList from '@/modules/roster/presentation/components/RosterPlayerList.vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 const route = useRoute()
 const themeStore = useThemeStore()
 const currentDate: Date = new Date()
 const currentYear: number = currentDate.getFullYear()
+const selectedSeasonYear = ref<number>(currentYear)
+const TEN_SEASONS = 10
+const firstSeasonYear = currentYear - (TEN_SEASONS - 1)
+const fallbackSeasonYears = Array.from(
+  { length: TEN_SEASONS },
+  (_, index) => firstSeasonYear + index,
+)
+const availableSeasonYears = ref<readonly number[]>(fallbackSeasonYears)
 
 const teamStore = useTeamStore()
 const router = useRouter()
 
 const team = computed(() => teamStore.currentTeam)
-const players = ref<Player[]>([])
-const playersLoading = ref(false)
-const playersError = ref<string | null>(null)
 
 const teamStats = ref<TeamStatistics | null>(null)
 const statsLoading = ref(false)
@@ -77,18 +84,23 @@ const calc = computed(() => {
   }
 })
 
-const loadTeamPlayers = async (teamId: number) => {
-  playersLoading.value = true
-  playersError.value = null
+
+const loadAvailableSeasonYears = async (teamId: number): Promise<void> => {
   try {
-    const response = await apiService.get<PaginatedResponse<Player>>(`/players/team/${teamId}`)
-    players.value = response.data.data || response.data
+    const databaseYears = await gameService.getTeamSeasonYears(teamId)
+    const databaseYearSet = new Set(databaseYears)
+
+    availableSeasonYears.value = fallbackSeasonYears
+
+    const latestAvailableYear = [...fallbackSeasonYears]
+      .reverse()
+      .find((year) => databaseYearSet.has(year))
+    if (latestAvailableYear !== undefined) {
+      selectedSeasonYear.value = latestAvailableYear
+    }
   } catch (error) {
-    console.error('Failed to load team players:', error)
-    playersError.value = 'Failed to load team players'
-    players.value = []
-  } finally {
-    playersLoading.value = false
+    console.error('Failed to load team season years:', error)
+    availableSeasonYears.value = fallbackSeasonYears
   }
 }
 
@@ -106,24 +118,14 @@ const loadTeamStatistics = async (teamId: number, seasonYear: number) => {
   }
 }
 
-const getTeamLogo = (team: any): string => {
-  if (!team || !team.name || !team.conference) return ''
-
-  const lastWord = team.name.trim().split(/\s+/).pop() || ''
-  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
-
-  return `/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`
-}
 
 onMounted(async () => {
   if (route.params.teamId && typeof route.params.teamId === 'string') {
     await themeStore.selectTeam(route.params.teamId)
   }
   if (team.value?.id) {
-    await Promise.all([
-      loadTeamPlayers(team.value.id),
-      loadTeamStatistics(team.value.id, currentYear)
-    ])
+    await loadAvailableSeasonYears(team.value.id)
+    await loadTeamStatistics(team.value.id, selectedSeasonYear.value)
   }
 })
 
@@ -131,30 +133,27 @@ watch(
   () => team.value?.id,
   async (newTeamId) => {
     if (newTeamId) {
-      await Promise.all([
-        loadTeamPlayers(newTeamId),
-        loadTeamStatistics(newTeamId, currentYear)
-      ])
+      await loadAvailableSeasonYears(newTeamId)
+      await loadTeamStatistics(newTeamId, selectedSeasonYear.value)
     }
   }
 )
 
-const viewPlayer = (playerId: number) => {
-  router.push(`/players/${playerId}?mode=read`)
-}
+watch(selectedSeasonYear, async (year) => {
+  if (team.value?.id) {
+    await loadTeamStatistics(team.value.id, year)
+  }
+})
 
-const editPlayer = (playerId: number) => {
-  router.push(`/players/${playerId}?mode=edit`)
-}
-
-const createPlayer = () => {
-  router.push(`/players?mode=create&teamId=${team.value?.id}`)
+const createRosterPlayer = () => {
+  router.push(`/roster-players?mode=create&teamId=${team.value?.id}`)
 }
 </script>
 
 <template>
   <Card v-if="team" class="team-details bg-team-primary text-team-accent">
     <template #title>
+      <TeamBadge :team="team" size="lg" />
       {{ team.name }}
     </template>
     <template #subtitle style="background-color: #054DBD;">
@@ -166,7 +165,7 @@ const createPlayer = () => {
         <div class="info-section">
           <div class="info-row">
             <h3 class="team-name-with-logo">
-              
+              <TeamBadge :team="team" size="sm" />
               {{ team.name }}
             </h3>
           </div>
@@ -191,9 +190,20 @@ const createPlayer = () => {
         </div>
 
         <div class="info-section">
-          <h3>Season Statistics</h3>
+          <div class="section-heading-row">
+            <h3>Season Statistics</h3>
+            <Dropdown
+              v-model="selectedSeasonYear"
+              :options="availableSeasonYears"
+              placeholder="Season"
+              class="season-select"
+            />
+          </div>
+          <Message v-if="statsError" severity="error" :closable="false" class="stats-message">
+            {{ statsError }}
+          </Message>
           <div class="info-row">
-            <span class="label">Won/Loss):</span>
+            <span class="label">Won/Loss:</span>
             <span class="value">{{ calc.wlRecord }}</span>
           </div>
           <div class="info-row">
@@ -220,118 +230,26 @@ const createPlayer = () => {
       </div>
 
       <Accordion class="relationships-accordion">
-        <AccordionTab header="Players">
-          <div class="players-section">
-            <div class="section-header">
-              <h4>Team Roster</h4>
-              <Button @click="createPlayer" label="Add Player" icon="pi pi-plus" class="p-button-success p-button-sm" />
-            </div>
-
-            <div v-if="playersLoading" class="loading-message">
-              <i class="pi pi-spinner pi-spin"></i> Loading players...
-            </div>
-
-            <div v-else-if="playersError" class="error-message">
-              <i class="pi pi-exclamation-triangle"></i> {{ playersError }}
-            </div>
-
-            <div v-else-if="players.length === 0" class="empty-message">
-              <i class="pi pi-info-circle"></i> No players found for this team.
-              <Button @click="createPlayer" label="Add First Player" icon="pi pi-plus" class="p-button-link" />
-            </div>
-
-            <DataTable v-else :value="players" responsiveLayout="scroll" :paginator="players.length > 10" :rows="10"
-              sortField="lastName" :sortOrder="1">
-              <Column header="Name" sortable>
-                <template #body="{ data }">
-                  <span class="player-name">
-                    {{ data.firstName }} {{ data.lastName }}
-                  </span>
-                </template>
-              </Column>
-              <Column field="position" header="Position" sortable />
-              <Column field="height" header="Height" sortable>
-                <template #body="{ data }">
-                  <span v-if="data.height">{{ Math.floor(data.height / 12) }}'{{ data.height % 12 }}"</span>
-                  <span v-else>-</span>
-                </template>
-              </Column>
-              <Column field="weight" header="Weight" sortable>
-                <template #body="{ data }">
-                  <span v-if="data.weight">{{ data.weight }} lbs</span>
-                  <span v-else>-</span>
-                </template>
-              </Column>
-              <Column field="college" header="College" sortable />
-              <Column field="experience" header="Experience" sortable>
-                <template #body="{ data }">
-                  <span v-if="data.experience !== undefined">{{ data.experience }} years</span>
-                  <span v-else>Rookie</span>
-                </template>
-              </Column>
-              <Column header="Actions">
-                <template #body="{ data }">
-                  <div class="action-buttons">
-                    <Button @click="viewPlayer(data.id)" icon="pi pi-eye" class="p-button-info p-button-sm"
-                      v-tooltip="'View Player'" />
-                    <Button @click="editPlayer(data.id)" icon="pi pi-pencil" class="p-button-warning p-button-sm"
-                      v-tooltip="'Edit Player'" />
-                  </div>
-                </template>
-              </Column>
-            </DataTable>
-
-            <div v-if="players.length > 0" class="players-summary">
-              <div class="summary-stats">
-                <div class="stat-item">
-                  <span class="stat-label">Total Players:</span>
-                  <span class="stat-value">{{ players.length }}</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">Average Height:</span>
-                  <span class="stat-value">
-                    {{
-                      players.filter(p => p.height).length > 0
-                        ? Math.round(
-                          players.filter(p => p.height).reduce((sum, p) => sum + p.height, 0) /
-                          players.filter(p => p.height).length
-                        ) + 'feet'
-                        : 'N/A'
-                    }}
-                  </span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">Average Weight:</span>
-                  <span class="stat-value">
-                    {{
-                      players.filter(p => p.weight).length > 0
-                        ? Math.round(
-                          players.filter(p => p.weight).reduce((sum, p) => sum + p.weight, 0) /
-                          players.filter(p => p.weight).length
-                        ) + ' lbs'
-                        : 'N/A'
-                    }}
-                  </span>
-                </div>
-              </div>
-            </div>
+        <AccordionTab header="Roster">
+          <div class="roster-section">
+            <RosterPlayerList :team-id="team.id" />
           </div>
         </AccordionTab>
 
         <AccordionTab header="Schedule">
-          <TeamScheduleGamesTable :team-id="team?.id" :initialSeasonYear="currentYear" />
+          <TeamScheduleGamesTable :team-id="team?.id" :initialSeasonYear="selectedSeasonYear" />
         </AccordionTab>
 
         <AccordionTab header="Draft Picks">
-          <TeamDraftPickTable :team-id="team?.id" :initialYear="currentYear" />
+          <TeamDraftPickTable :team-id="team?.id" :initialYear="selectedSeasonYear" />
         </AccordionTab>
 
         <AccordionTab header="Team Needs">
-          <p>Team draft needs will be displayed here when team needs relationships are implemented.</p>
+          <TeamNeedsPanel :team-id="team.id" />
         </AccordionTab>
 
         <AccordionTab header="Playoff Results">
-          <p>Playoff history will be displayed here when post-season results are implemented.</p>
+          <TeamPlayoffResultsTable :team-id="team.id" :playoff-year="selectedSeasonYear" />
         </AccordionTab>
       </Accordion>
     </template>
@@ -386,87 +304,19 @@ const createPlayer = () => {
   width: 100%;
 }
 
-.players-section {
+.roster-section {
   width: 100%;
   box-sizing: border-box;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--surface-border);
-}
-
-.section-header h4 {
-  margin: 0;
-  color: var(--text-color);
-}
-
-.loading-message,
-.error-message,
-.empty-message {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-color-secondary);
-}
-
-.error-message {
-  color: var(--red-500);
-}
-
-.loading-message i {
-  margin-right: 0.5rem;
-}
-
-.player-name {
-  font-weight: 500;
-  color: #FFFFFF;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.players-summary {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--surface-border);
-}
-
-.summary-stats {
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 120px;
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--text-color-secondary);
-  margin-bottom: 0.25rem;
-}
-
-.stat-value {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-color);
 }
 
 .team-name-with-logo {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
+}
+.header-logo {
+  height: 52px;
+  width: auto;
 }
 
 .inline-logo {
@@ -481,4 +331,9 @@ const createPlayer = () => {
   width: 100%;
   box-sizing: border-box;
 }
+
+.section-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.section-heading-row h3 { flex: 1; }
+.season-select { min-width: 8rem; }
+.stats-message { margin-bottom: 0.75rem; }
 </style>

@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, defineAsyncComponent } from 'vue'
+import TeamBadge from '@/components/team/TeamBadge.vue'
+import { ref, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import { useThemeStore } from '@/stores/theme.store'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
+import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue'
 
 interface Props {
-  teamId: number
+  teamId?: number 
   initialSeasonYear?: number
 }
 
@@ -17,11 +18,6 @@ const props = defineProps<Props>()
 
 const gameStore = useGameStore()
 const themeStore = useThemeStore()
-
-// Lazy-load GameReadOnly to avoid upfront bundle cost
-const GameReadOnly = defineAsyncComponent(() =>
-  import('@/components/game/GameReadOnly.vue')
-)
 
 // Filters
 const seasonYear = ref<number>(props.initialSeasonYear || new Date().getFullYear())
@@ -74,24 +70,23 @@ const onAccordionExpand = async () => {
   }
 }
 
-const viewGame = (id: number) => {
+const viewGame = (id: number): void => {
   selectedGameId.value = id
   dialogVisible.value = true
 }
 
-const getTeamShortNameAndLogo = (team: any): { shortName: string; logoPath: string } => {
-  if (team && team.name && team.conference) {
-    const parts = team.name.trim().split(' ')
-    const shortName = parts[parts.length - 1]
-    const fileExt = shortName === 'Chargers' ? 'webp' : 'avif'
-    const logoFile = `${shortName}.${fileExt}`
-    return { shortName, logoPath: `/images/${team.conference.toLowerCase()}/${logoFile}` }
-  }
+const onGameRowClick = (event: { data: { id?: unknown } }): void => {
+  const id = Number(event.data.id)
+  if (Number.isInteger(id) && id > 0) viewGame(id)
+}
+
+const getTeamShortName = (team: any): string => {
+  if (team && team.name) return team.name.trim().split(/\s+/).at(-1) ?? 'Unknown'
   if (typeof team === 'number') {
     const found = themeStore.teams.find(t => Number(t.id) === team)
-    if (found) return getTeamShortNameAndLogo(found)
+    return found?.name?.trim().split(/\s+/).at(-1) ?? 'Unknown'
   }
-  return { shortName: 'Unknown', logoPath: '' }
+  return 'Unknown'
 }
 
 onMounted(() => {
@@ -138,7 +133,8 @@ onMounted(() => {
         responsiveLayout="scroll"
         dataKey="id"
         showGridlines
-        class="themed-datatable"
+        class="themed-datatable clickable-rows"
+        @row-click="onGameRowClick"
       >
         <Column header="Week" sortField="gameWeek">
           <template #body="{ data }">
@@ -157,13 +153,13 @@ onMounted(() => {
           <template #body="{ data }">
             <div class="matchup-cell">
               <div class="team">
-                
-                <span>{{ getTeamShortNameAndLogo(data.awayTeam).shortName }}</span>
+                <TeamBadge v-if="data.awayTeam" :team="data.awayTeam" size="sm" />
+                <span>{{ getTeamShortName(data.awayTeam) }}</span>
               </div>
               <span class="at-symbol">@</span>
               <div class="team">
-                
-                <span>{{ getTeamShortNameAndLogo(data.homeTeam).shortName }}</span>
+                <TeamBadge v-if="data.homeTeam" :team="data.homeTeam" size="sm" />
+                <span>{{ getTeamShortName(data.homeTeam) }}</span>
               </div>
             </div>
           </template>
@@ -197,27 +193,23 @@ onMounted(() => {
               icon="pi pi-eye"
               class="p-button-info p-button-sm"
               v-tooltip="'View Game'"
-              @click="viewGame(data.id)"
+              @click.stop="viewGame(data.id)"
             />
           </template>
         </Column>
       </DataTable>
     </div>
 
-    <Dialog
+    <PlayoffGameDetailsDialog
       v-model:visible="dialogVisible"
-      modal
-      header="Game Details"
-      :style="{ width: '65vw' }"
-      :breakpoints="{ '1199px': '85vw', '575px': '95vw' }"
-    >
-      <GameReadOnly v-if="selectedGameId" :id="selectedGameId" mode="read" />
-    </Dialog>
+      :game-id="selectedGameId"
+    />
   </div>
 </template>
 
 <style scoped>
 .schedule-section { display:flex; flex-direction:column; gap:1rem; }
+:deep(.clickable-rows .p-datatable-tbody > tr) { cursor:pointer; }
 .filters {
   display:flex;
   align-items:flex-end;
@@ -236,7 +228,7 @@ onMounted(() => {
 }
 .matchup-cell { display:flex; align-items:center; gap:0.25rem; }
 .team { display:flex; align-items:center; gap:0.25rem; }
-.team-logo { width:36px; height:36px; object-fit:contain; }
+.team-logo { width:42px; height:42px; object-fit:contain; filter: none; opacity: 1; }
 .at-symbol { font-weight:bold; margin:0 0.25rem; }
 .loading-state { text-align:center; padding:1rem; color:var(--text-color-secondary); }
 .text-muted { color:#6c757d; font-style:italic; }
