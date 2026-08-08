@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import { useThemeStore } from '@/stores/theme.store'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 import Card from 'primevue/card'
 import Button from 'primevue/button'
@@ -89,6 +90,7 @@ const selectedTeam = computed<TeamOption | null>(() => {
   return teams.value.find(t => t.id === id) ?? null
 })
 
+
 const selectedTeamLabel = computed(() => {
   const t = selectedTeam.value
   if (!t) return 'Select a team'
@@ -161,8 +163,8 @@ onMounted(async () => {
 
           <div class="hero-right">
             <div class="team-chip">
-              
-              <div class="team-logo team-logo--empty">🏈</div>
+              <TeamBadge v-if="selectedTeam" :name="selectedTeam.name" :abbreviation="selectedTeam.abbreviation" size="lg" />
+              <div v-else class="team-logo team-logo--empty">🏈</div>
               <div class="team-chip-text">
                 <div class="team-chip-label">Your Team</div>
                 <div class="team-chip-value">{{ selectedTeamLabel }}</div>
@@ -219,6 +221,7 @@ onMounted(async () => {
                 <!-- selected value -->
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="team-opt">
+                    <TeamBadge :name="teams.find(t => t.id === slotProps.value)?.name" :abbreviation="teams.find(t => t.id === slotProps.value)?.abbreviation" size="sm" />
                     <span class="team-opt-text">
                       {{ (teams.find(t => t.id === slotProps.value)?.abbreviation ?? teams.find(t => t.id === slotProps.value)?.name) }}
                     </span>
@@ -229,7 +232,7 @@ onMounted(async () => {
                 <!-- dropdown rows -->
                 <template #option="slotProps">
                   <div class="team-opt">
-                    
+                    <TeamBadge :name="slotProps.option.name" :abbreviation="slotProps.option.abbreviation" size="sm" />
                     <div class="team-opt-text">
                       <div class="team-opt-name">{{ slotProps.option.name }}</div>
                       <div class="team-opt-sub">
@@ -330,7 +333,8 @@ onMounted(async () => {
             <Divider />
 
             <div class="fineprint">
-              Team abbreviations are shown instead of trademarked team artwork.
+              Team badges use the shared DPA abbreviation and color mapping.
+              If a logo doesn’t appear, verify the filename matches the team short name used by your helper.
             </div>
           </div>
         </template>

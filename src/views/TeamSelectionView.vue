@@ -27,7 +27,6 @@
               <template #header>
                 <div class="tab-header">
                   <div class="tab-logo">
-                    
                     <div class="tab-logo-fallback">{{ conference.abbreviation }}</div>
                   </div>
                   <div class="tab-info">
@@ -90,9 +89,7 @@ const currentRound = ref<number>(1)
 const activeTabIndex = ref<number>(0)
 
 // Use team data composable
-const { conferences, getAllTeamCodes, getTeamsByConference } = useTeamData({ 
-  enableLogos: true
-})
+const { conferences, getAllTeamCodes, getTeamsByConference } = useTeamData()
 
 // Computed
 const getSelectedInConference = (conferenceAbbr: 'AFC' | 'NFC') => {

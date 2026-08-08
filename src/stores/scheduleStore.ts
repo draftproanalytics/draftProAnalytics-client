@@ -29,59 +29,8 @@ export interface UpcomingGameRow {
 
 
 
-function resolveTeamLogo(teamName: string): string {
-  const cleaned = teamName
-    //    .replace(/[^A-Za-z]/g, '') // strip symbols
-    .replace(/[^A-Za-z0-9]/g, '') // keep digits too
-    .toLowerCase()
-
-  // Path prefix
-  const afc = '/src/assets/images/afc/'
-  const nfc = '/src/assets/images/nfc/'
-
-  // AFC teams
-  const afcMap: Record<string, string> = {
-    chiefs: 'Chiefs.avif',
-    broncos: 'Broncos.avif',
-    raiders: 'Raiders.avif',
-    chargers: 'Chargers.webp', // special case
-    patriots: 'Patriots.avif',
-    jets: 'Jets.avif',
-    dolphins: 'Dolphins.avif',
-    bills: 'Bills.avif',
-    steelers: 'Steelers.avif',
-    browns: 'Browns.avif',
-    ravens: 'Ravens.avif',
-    bengals: 'Bengals.avif',
-    colts: 'Colts.avif',
-    jaguars: 'Jaguars.avif',
-    texans: 'Texans.avif',
-    titans: 'Titans.avif',
-  }
-
-  const nfcMap: Record<string, string> = {
-    bears: 'Bears.avif',
-    packers: 'Packers.avif',
-    lions: 'Lions.avif',
-    vikings: 'Vikings.avif',
-    cowboys: 'Cowboys.avif',
-    giants: 'Giants.avif',
-    eagles: 'Eagles.avif',
-    commanders: 'Commanders.avif',
-    buccaneers: 'Buccaneers.avif',
-    saints: 'Saints.avif',
-    falcons: 'Falcons.avif',
-    panthers: 'Panthers.avif',
-    rams: 'Rams.avif',
-    seahawks: 'Seahawks.avif',
-    '49ers': '49ers.avif',
-    cardinals: 'Cardinals.avif',
-  }
-
-  if (cleaned in afcMap) return afc + afcMap[cleaned]
-  if (cleaned in nfcMap) return nfc + nfcMap[cleaned]
-
-  return '/src/assets/images/default-team.png'
+function resolveTeamLogo(_teamName: string): string {
+  return ''
 }
 
 function toPaginationMeta(total: number, page: number, limit: number): PaginationMeta {

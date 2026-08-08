@@ -7,7 +7,6 @@ export interface Team {
   conference: 'AFC' | 'NFC'
   division: 'East' | 'North' | 'South' | 'West'
   color: string
-  logoUrl?: string  // Optional logo URL for team images
 }
 
 export interface Division {
@@ -19,7 +18,6 @@ export interface Conference {
   name: string
   abbreviation: 'AFC' | 'NFC'
   color: string
-  logoUrl?: string  // Optional logo URL for conference images
   teams: Team[]
   divisions: Division[]
 }

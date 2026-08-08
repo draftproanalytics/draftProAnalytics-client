@@ -13,7 +13,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
-import { resolveTeamLogo } from '@/util/resolveTeamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 const playerStore = usePlayerStore()
 const player = computed(() => playerStore.currentPlayer)
@@ -88,13 +88,6 @@ const teamDisplayName = (playerTeam: PlayerTeam): string => {
   return `${city} ${name}`
 }
 
-const teamLogo = (playerTeam: PlayerTeam): string =>
-  resolveTeamLogo(
-    playerTeam.team?.fullName,
-    playerTeam.team?.name,
-    playerTeam.team?.abbreviation,
-    teamDisplayName(playerTeam),
-  )
 
 const yearRange = (team: PlayerTeam): string => {
   const start = team.startYear ?? 'Unknown'
@@ -132,7 +125,12 @@ watch(() => player.value?.id, loadRelationships)
             <Column header="Team" sortable>
               <template #body="{ data }">
                 <div class="team-cell">
-                  
+                  <TeamBadge
+                    :team="data.team"
+                    :name="teamDisplayName(data)"
+                    :abbreviation="data.team?.abbreviation"
+                    size="md"
+                  />
                   <span>{{ teamDisplayName(data) }}</span>
                 </div>
               </template>

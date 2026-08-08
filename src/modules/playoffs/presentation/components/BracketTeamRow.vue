@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/team/TeamBadge.vue'
 export type BracketSideAlign = 'left' | 'right'
 
 export interface BracketTeam {
@@ -24,7 +25,7 @@ const props = defineProps<{
       <span class="seed" aria-label="Seed">{{ props.team.seed ?? '—' }}</span>
 
       <!-- logo -->
-      
+      <TeamBadge :name="props.team.name" size="sm" />
 
       <!-- W/L record -->
       <span class="record" aria-label="Record">{{ props.team.record ?? '—' }}</span>

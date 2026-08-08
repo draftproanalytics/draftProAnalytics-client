@@ -7,10 +7,7 @@
     </div>
 
     <div class="team-logo">
-      
-      <div class="team-logo-fallback" :style="{ backgroundColor: team.color }">
-        {{ team.code }}
-      </div>
+      <TeamBadge :name="`${team.city} ${team.name}`" :abbreviation="team.code" size="lg" />
     </div>
 
     <div v-if="selected" class="selected-indicator">
@@ -22,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import type { Team } from '@/types/teams'
 
 interface Props {
@@ -29,7 +27,7 @@ interface Props {
   selected: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 defineEmits<{
   toggle: []

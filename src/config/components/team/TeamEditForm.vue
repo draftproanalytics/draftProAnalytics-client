@@ -11,6 +11,7 @@ import { useToast } from 'primevue/usetoast'
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme.store'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 
 const themeStore = useThemeStore()
@@ -73,14 +74,6 @@ watch(
   },
   { immediate: true }
 )
-const getTeamLogo = (team: any): string => {
-  if (!team || !team.name || !team.conference) return ''
-
-  const lastWord = team.name.trim().split(/\s+/).pop() || ''
-  const ext = lastWord === 'Chargers' ? 'webp' : 'avif'
-
-  return `/images/${team.conference.toLowerCase()}/${lastWord}.${ext}`
-}
 onMounted(async () => {
   // Apply theme based on route parameter if present
   if (route.params.teamId && typeof route.params.teamId === 'string') {
@@ -123,7 +116,7 @@ const onCancel = () => {
     <template #subtitle v-if="team">
       <div class="info-row">
         <h3 class="team-name-with-logo">
-          
+          <TeamBadge :team="team" size="sm" />
           {{ team.name }}
         </h3>
       </div>

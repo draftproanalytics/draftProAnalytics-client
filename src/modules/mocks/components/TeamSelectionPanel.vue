@@ -40,7 +40,7 @@
         :class="['team-card', { selected: isSelected(team.id) }]"
         @click="toggleTeam(team.id)"
       >
-        
+        <TeamBadge :name="team.name" :abbreviation="team.abbreviation" size="lg" />
         <span class="team-abbr">{{ team.abbreviation }}</span>
       </div>
     </div>
@@ -48,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+import TeamBadge from '@/components/team/TeamBadge.vue'
 import { ref, computed } from 'vue';
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';

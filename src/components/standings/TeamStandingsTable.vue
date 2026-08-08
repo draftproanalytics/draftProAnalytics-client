@@ -13,7 +13,11 @@
             <Column field="teamName" header="Team" sortable>
               <template #body="{ data }">
                 <div class="team-cell">
-                  
+                  <TeamBadge
+                    :name="data.teamName ?? data.fullName ?? data.name"
+                    :abbreviation="data.abbreviation"
+                    size="md"
+                  />
                   <span>{{ data.teamName ?? data.abbreviation }}</span>
                 </div>
               </template>
@@ -46,7 +50,7 @@
 import { computed, onMounted } from 'vue';
 import { useStandingsStore } from '@/stores/standingsStore';
 import { useRouter } from "vue-router"
-import { resolveTeamLogo } from '@/util/resolveTeamLogo'
+import TeamBadge from '@/components/team/TeamBadge.vue'
 
 interface StandingsRow {
   teamId?: number
@@ -81,16 +85,7 @@ const router = useRouter()
 const store = useStandingsStore();
 
 
-function teamLogo(row: StandingsRow): string {
-  return row.teamLogo
-    ?? row.logo
-    ?? resolveTeamLogo(
-      row.fullName,
-      row.name,
-      row.abbreviation,
-      row.teamName,
-    )
-}
+
 
 function resolveTeamId(r: StandingsRow): number | null {
   const v = r.teamId ?? r.id
