@@ -251,6 +251,8 @@ watch(
       data-key="id"
       :loading="loading"
       responsive-layout="scroll"
+      scrollable
+      scroll-height="32rem"
       striped-rows
       class="needs-table"
     >

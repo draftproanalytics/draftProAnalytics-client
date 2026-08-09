@@ -145,16 +145,27 @@ watch(selectedSeasonYear, async (year) => {
   }
 })
 
-const createRosterPlayer = () => {
-  router.push(`/roster-players?mode=create&teamId=${team.value?.id}`)
+const returnToTeamList = async (): Promise<void> => {
+  await router.push({ name: 'Teams' })
 }
 </script>
 
 <template>
   <Card v-if="team" class="team-details bg-team-primary text-team-accent">
     <template #title>
-      <TeamBadge :team="team" size="lg" />
-      {{ team.name }}
+      <div class="team-title-row">
+        <div class="team-title">
+          <TeamBadge :team="team" size="lg" />
+          <span>{{ team.name }}</span>
+        </div>
+        <Button
+          label="Return to List"
+          icon="pi pi-arrow-left"
+          link
+          class="return-to-list"
+          @click="returnToTeamList"
+        />
+      </div>
     </template>
     <template #subtitle style="background-color: #054DBD;">
       {{ team.city }}, {{ team.state }} - {{ team.conference }} {{ team.division }}
@@ -266,6 +277,26 @@ const createRosterPlayer = () => {
   box-sizing: border-box;
 }
 
+.team-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+}
+
+.team-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.return-to-list {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .team-info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -336,4 +367,14 @@ const createRosterPlayer = () => {
 .section-heading-row h3 { flex: 1; }
 .season-select { min-width: 8rem; }
 .stats-message { margin-bottom: 0.75rem; }
+
+@media (max-width: 640px) {
+  .team-title-row {
+    align-items: flex-start;
+  }
+
+  .team-title {
+    flex: 1 1 auto;
+  }
+}
 </style>

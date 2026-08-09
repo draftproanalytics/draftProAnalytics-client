@@ -88,6 +88,8 @@ onMounted(async () => {
       :paginator="false"
       class="draft-picks-table"
       responsiveLayout="scroll"
+      scrollable
+      scrollHeight="32rem"
     >
       <Column field="round" header="Round" sortable />
       <Column field="pickNumber" header="Pick" sortable />
