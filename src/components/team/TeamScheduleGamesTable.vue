@@ -131,6 +131,8 @@ onMounted(() => {
         :value="scheduleRows"
         :loading="loading"
         responsiveLayout="scroll"
+        scrollable
+        scrollHeight="32rem"
         dataKey="id"
         showGridlines
         class="themed-datatable clickable-rows"
@@ -223,8 +225,8 @@ onMounted(() => {
   margin-bottom:0.25rem;
 }
 .table-container {
-  max-height:70vh;
-  overflow-y:auto;
+  width: 100%;
+  overflow-x: auto;
 }
 .matchup-cell { display:flex; align-items:center; gap:0.25rem; }
 .team { display:flex; align-items:center; gap:0.25rem; }
