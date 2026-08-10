@@ -8,7 +8,7 @@
     </div>
     <p class="footer-purpose">The right talent. The right roster. Better decisions.</p>
     <p class="footer-legal">
-      Copyright © 2025-2026 Darryl Thompson. All rights reserved.
+      Copyright © 2026 DraftProAnalytics. All rights reserved.
       RosterTheory™ and DraftProAnalytics™ are claimed trademarks.
     </p>
     <p class="footer-disclaimer">
