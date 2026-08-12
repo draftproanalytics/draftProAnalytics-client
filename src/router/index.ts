@@ -291,13 +291,10 @@ const routes: RouteRecordRaw[] = [
         beforeEnter: requireAuth,
         meta: { requiresAuth: true, perm: { domain: 'SCOUTING', action: 'VIEW' } },
       },
-      {
-        path: 'prospects/:id?',
-        name: 'ProspectDetail',
-        component: ProspectDetail,
-        beforeEnter: requireAuth,
-        meta: { requiresAuth: true, perm: { domain: 'SCOUTING', action: 'VIEW' } },
-      },
+      { path: 'prospects', name: 'ProspectList', component: ProspectDetail, beforeEnter: requireAuth, meta: { requiresAuth: true, prospectMode: 'list', perm: { domain: 'SCOUTING', action: 'VIEW' } } },
+      { path: 'prospects/new', name: 'ProspectCreate', component: ProspectDetail, beforeEnter: requireAuth, meta: { requiresAuth: true, prospectMode: 'create', perm: { domain: 'SCOUTING', action: 'CREATE' } } },
+      { path: 'prospects/:id', name: 'ProspectDetail', component: ProspectDetail, beforeEnter: requireAuth, meta: { requiresAuth: true, prospectMode: 'read', perm: { domain: 'SCOUTING', action: 'VIEW' } } },
+      { path: 'prospects/:id/edit', name: 'ProspectEdit', component: ProspectDetail, beforeEnter: requireAuth, meta: { requiresAuth: true, prospectMode: 'edit', perm: { domain: 'SCOUTING', action: 'EDIT' } } },
 
       {
         path: 'draft-board',

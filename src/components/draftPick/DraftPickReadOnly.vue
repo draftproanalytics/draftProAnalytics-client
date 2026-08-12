@@ -21,12 +21,8 @@ const team = computed(() => {
   return null
 })
 
-const prospect = computed(() => {
-  if (draftPick.value?.playerId) {
-    return prospectStore.getProspectById(draftPick.value.playerId)
-  }
-  return null
-})
+const prospect = computed(() => prospectStore.currentProfile?.prospect ?? null)
+const combine = computed(() => prospectStore.currentProfile?.combine ?? null)
 
 const formatPickInfo = computed(() => {
   if (!draftPick.value) return ''
@@ -44,11 +40,9 @@ const formatPlayerName = computed(() => {
 })
 
 onMounted(async () => {
-  // Load related data
-  await Promise.all([
-    teamStore.fetchAll(),
-    prospectStore.fetchAll()
-  ])
+  const tasks: Promise<unknown>[] = [teamStore.fetchAll()]
+  if (draftPick.value?.prospectId) tasks.push(prospectStore.fetchProfile(draftPick.value.prospectId))
+  await Promise.all(tasks)
 })
 </script>
 
@@ -128,25 +122,25 @@ onMounted(async () => {
       <Accordion class="relationships-accordion">
         <AccordionTab header="Player Details" v-if="prospect">
           <div class="relationship-content">
-            <div class="info-row">
+            <div class="info-row" v-if="combine?.height">
               <span class="label">Height:</span>
-              <span>{{ prospect.height }}"</span>
+              <span>{{ combine.height }}"</span>
             </div>
-            <div class="info-row">
+            <div class="info-row" v-if="combine?.weight">
               <span class="label">Weight:</span>
-              <span>{{ prospect.weight }} lbs</span>
+              <span>{{ combine.weight }} lbs</span>
             </div>
-            <div class="info-row" v-if="prospect.fortyTime">
+            <div class="info-row" v-if="combine?.fortyTime">
               <span class="label">40 Yard Dash:</span>
-              <span>{{ prospect.fortyTime }}s</span>
+              <span>{{ combine.fortyTime }}s</span>
             </div>
-            <div class="info-row" v-if="prospect.verticalLeap">
+            <div class="info-row" v-if="combine?.verticalLeap">
               <span class="label">Vertical Leap:</span>
-              <span>{{ prospect.verticalLeap }}"</span>
+              <span>{{ combine.verticalLeap }}"</span>
             </div>
-            <div class="info-row" v-if="prospect.benchPress">
+            <div class="info-row" v-if="combine?.benchPress !== null && combine?.benchPress !== undefined">
               <span class="label">Bench Press:</span>
-              <span>{{ prospect.benchPress }} reps</span>
+              <span>{{ combine.benchPress }} reps</span>
             </div>
             <div class="info-row" v-if="prospect.homeCity && prospect.homeState">
               <span class="label">Hometown:</span>

@@ -51,12 +51,6 @@
               <Column field="lastName" header="Last Name" />
               <Column field="position" header="Pos" />
               <Column field="college" header="College" />
-              <Column field="height" header="Height">
-                <template #body="{ data }">
-                  {{ formatHeight(data.height) }}
-                </template>
-              </Column>
-              <Column field="weight" header="Weight" />
               <Column>
                 <template #body="{ data }">
                   <Button 
@@ -157,10 +151,9 @@ const {
 } = draftStore
 
 const filteredProspects = computed(() => {
-  return availableUndraftedProspects.sort((a, b) => {
-    // Simple ranking by position needs and combine metrics
-    return (b.fortyTime || 999) - (a.fortyTime || 999)
-  })
+  return [...availableUndraftedProspects].sort((a, b) =>
+    a.position.localeCompare(b.position) || a.lastName.localeCompare(b.lastName)
+  )
 })
 
 const teamNeeds = computed(() => {
@@ -173,11 +166,6 @@ const recentPicks = computed(() => {
 })
 
 // Methods
-const formatHeight = (height: number) => {
-  const feet = Math.floor(height / 12)
-  const inches = height % 12
-  return `${feet}'${inches}"`
-}
 
 const selectProspect = async (prospect: Prospect) => {
   if (!isUsersTurn || !prospect.id) return

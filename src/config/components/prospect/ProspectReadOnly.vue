@@ -1,325 +1,148 @@
 <!-- src/components/prospect/ProspectReadOnly.vue -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
 import { useProspectStore } from '@/stores/prospectStore'
-import { useTeamStore } from '@/stores/teamStore'
-import { useDraftPickStore } from '@/stores/draftPickStore'
-import { usePlayerAwardStore } from '@/stores/playerAwardStore'
-import { useCombineScoreStore } from '@/stores/combineScoreStore'
+import Button from 'primevue/button'
 import Card from 'primevue/card'
-import Accordion from 'primevue/accordion'
-import AccordionTab from 'primevue/accordiontab'
-import Tag from 'primevue/tag'
-import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
+import Tag from 'primevue/tag'
 
-const prospectStore = useProspectStore()
-const teamStore = useTeamStore()
-const draftPickStore = useDraftPickStore()
-const playerAwardStore = usePlayerAwardStore()
-const combineScoreStore = useCombineScoreStore()
+const store = useProspectStore(); const router = useRouter()
+const profile = computed(() => store.currentProfile)
+const prospect = computed(() => profile.value?.prospect ?? store.currentProspect)
+const formatEighths = (eighths: number): string => {
+  const fractions: Record<number, string> = {
+    0: '',
+    1: '⅛',
+    2: '¼',
+    3: '⅜',
+    4: '½',
+    5: '⅝',
+    6: '¾',
+    7: '⅞',
+  }
 
-const prospect = computed(() => prospectStore.currentProspect)
-const relatedTeam = ref(null)
-const relatedDraftPick = ref(null)
-const relatedAwards = ref([])
-const relatedCombineScore = ref(null)
+  return fractions[eighths] ?? ''
+}
 
-const formatHeight = (height: number) => {
+const formatHeight = (height: number | null | undefined): string => {
+  if (height == null || height <= 0) return 'N/A'
+
+  // Football scouting height notation uses FIIE:
+  // feet (F), whole inches (II), eighths of an inch (E).
+  // Example: 6016 = 6' 1 6/8" = 6' 1¾".
+  if (Number.isInteger(height) && height >= 1000 && height <= 9999) {
+    const encoded = Math.trunc(height).toString().padStart(4, '0')
+    const feet = Number(encoded.slice(0, 1))
+    const inches = Number(encoded.slice(1, 3))
+    const eighths = Number(encoded.slice(3, 4))
+
+    if (feet >= 4 && feet <= 7 && inches >= 0 && inches < 12 && eighths >= 0 && eighths < 8) {
+      return `${feet}' ${inches}${formatEighths(eighths)}\"`
+    }
+  }
+
+  // Fallback for values already stored as total inches/decimal inches.
   const feet = Math.floor(height / 12)
-  const inches = height % 12
-  return `${feet}'${inches}"`
+  const inches = height - (feet * 12)
+  return `${feet}' ${Number.isInteger(inches) ? inches : inches.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}\"`
 }
 
-const formatTime = (time?: number) => {
-  return time ? `${time.toFixed(2)}s` : 'N/A'
-}
+const formatScoutingInches = (value: number | null | undefined): string => {
+  if (value == null || value <= 0) return 'N/A'
 
-const formatDistance = (distance?: number, unit = 'in') => {
-  return distance ? `${distance}" ${unit}` : 'N/A'
-}
+  // Football scouting inch notation uses whole inches plus eighths:
+  // 868 = 8 6/8" = 8¾"; 3168 = 31 6/8" = 31¾".
+  if (Number.isInteger(value) && value >= 100) {
+    const encoded = Math.trunc(value).toString()
+    const wholeInches = Number(encoded.slice(0, -2))
+    const eighths = Number(encoded.slice(-2, -1))
+    const denominator = Number(encoded.slice(-1))
 
-const formatReps = (reps?: number) => {
-  return reps ? `${reps} reps` : 'N/A'
-}
-
-const getPositionSeverity = (position: string) => {
-  const severityMap: Record<string, string> = {
-    'QB': 'danger',
-    'RB': 'success',
-    'WR': 'warning',
-    'TE': 'info',
-    'OL': 'secondary',
-    'DL': 'contrast',
-    'LB': 'primary',
-    'DB': 'help'
-  }
-  return severityMap[position] || 'secondary'
-}
-
-onMounted(async () => {
-  if (prospect.value) {
-    // Load related team data
-    if (prospect.value.teamId) {
-      await teamStore.fetchById(prospect.value.teamId)
-      relatedTeam.value = teamStore.getTeamById(prospect.value.teamId)
+    if (wholeInches > 0 && denominator === 8 && eighths >= 0 && eighths < 8) {
+      return `${wholeInches}${formatEighths(eighths)}\"`
     }
-
-    // Load related draft pick data
-    if (prospect.value.draftPickId) {
-      await draftPickStore.fetchById(prospect.value.draftPickId)
-      relatedDraftPick.value = draftPickStore.getDraftPickById(prospect.value.draftPickId)
-    }
-
-    // Load related awards
-    await playerAwardStore.fetchByPlayerId(prospect.value.id)
-    relatedAwards.value = playerAwardStore.getAwardsByPlayerId(prospect.value.id)
-
-    // Load combine score
-    await combineScoreStore.fetchByPlayerId(prospect.value.id)
-    relatedCombineScore.value = combineScoreStore.getScoreByPlayerId(prospect.value.id)
   }
-})
+
+  return `${value}\"`
+}
+
+const formatValue = (value: number | null | undefined, suffix = '') => value == null ? 'N/A' : `${value}${suffix}`
+const draftStatusLabel = (status: string | undefined) => status === 'DRAFTED' ? 'Drafted' : status === 'UDFA' ? 'UDFA' : 'Pre-Draft'
+const draftStatusSeverity = (status: string | undefined) => status === 'DRAFTED' ? 'success' : status === 'UDFA' ? 'warning' : 'info'
+const edit = () => { if (prospect.value?.id) router.push(`/prospects/${prospect.value.id}/edit`) }
 </script>
 
 <template>
-  <Card v-if="prospect" class="prospect-details">
-    <template #title>
-      {{ prospect.firstName }} {{ prospect.lastName }}
-      <Tag 
-        :value="prospect.position" 
-        :severity="getPositionSeverity(prospect.position)"
-        class="ml-2"
-      />
-    </template>
+  <div v-if="prospect" class="prospect-profile">
+    <h1 class="page-title">Prospect Profile</h1>
 
-    <template #content>
-      <div class="prospect-info-grid">
-        <!-- Basic Information -->
-        <div class="info-section">
-          <h3>Basic Information</h3>
-          <div class="info-row">
-            <span class="label">Full Name:</span>
-            <span>{{ prospect.firstName }} {{ prospect.lastName }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Position:</span>
-            <span>{{ prospect.position }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">College:</span>
-            <span>{{ prospect.college }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Draft Status:</span>
-            <Tag 
-              :value="prospect.drafted ? 'Drafted' : 'Available'" 
-              :severity="prospect.drafted ? 'success' : 'warning'"
-            />
-          </div>
-          <div class="info-row" v-if="prospect.draftYear">
-            <span class="label">Draft Year:</span>
-            <span>{{ prospect.draftYear }}</span>
-          </div>
-        </div>
-
-        <!-- Physical Measurements -->
-        <div class="info-section">
-          <h3>Physical Measurements</h3>
-          <div class="info-row">
-            <span class="label">Height:</span>
-            <span>{{ formatHeight(prospect.height) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Weight:</span>
-            <span>{{ prospect.weight }} lbs</span>
-          </div>
-          <div class="info-row" v-if="prospect.handSize">
-            <span class="label">Hand Size:</span>
-            <span>{{ formatDistance(prospect.handSize) }}</span>
-          </div>
-          <div class="info-row" v-if="prospect.armLength">
-            <span class="label">Arm Length:</span>
-            <span>{{ formatDistance(prospect.armLength) }}</span>
-          </div>
-        </div>
-
-        <!-- Background Information -->
-        <div class="info-section">
-          <h3>Background</h3>
-          <div class="info-row" v-if="prospect.homeCity">
-            <span class="label">Hometown:</span>
-            <span>{{ prospect.homeCity }}<span v-if="prospect.homeState">, {{ prospect.homeState }}</span></span>
-          </div>
-          <div class="info-row" v-if="prospect.createdAt">
-            <span class="label">Added:</span>
-            <span>{{ new Date(prospect.createdAt).toLocaleDateString() }}</span>
-          </div>
-          <div class="info-row" v-if="prospect.updatedAt">
-            <span class="label">Last Updated:</span>
-            <span>{{ new Date(prospect.updatedAt).toLocaleDateString() }}</span>
-          </div>
-        </div>
-
-        <!-- Combine Performance -->
-        <div class="info-section" v-if="prospect.fortyTime || prospect.verticalLeap || prospect.benchPress">
-          <h3>Combine Performance</h3>
-          <div class="info-row" v-if="prospect.fortyTime">
-            <span class="label">40-Yard Dash:</span>
-            <span>{{ formatTime(prospect.fortyTime) }}</span>
-          </div>
-          <div class="info-row" v-if="prospect.tenYardSplit">
-            <span class="label">10-Yard Split:</span>
-            <span>{{ formatTime(prospect.tenYardSplit) }}</span>
-          </div>
-          <div class="info-row" v-if="prospect.verticalLeap">
-            <span class="label">Vertical Leap:</span>
-            <span>{{ formatDistance(prospect.verticalLeap) }}</span>
-          </div>
-          <div class="info-row" v-if="prospect.broadJump">
-            <span class="label">Broad Jump:</span>
-            <span>{{ formatDistance(prospect.broadJump) }}</span>
-          </div>
-          <div class="info-row" v-if="prospect.threeCone">
-            <span class="label">3-Cone Drill:</span>
-            <span>{{ formatTime(prospect.threeCone) }}</span>
-          </div>
-          <div class="info-row" v-if="prospect.twentyYardShuttle">
-            <span class="label">20-Yard Shuttle:</span>
-            <span>{{ formatTime(prospect.twentyYardShuttle) }}</span>
-          </div>
-          <div class="info-row" v-if="prospect.benchPress">
-            <span class="label">Bench Press:</span>
-            <span>{{ formatReps(prospect.benchPress) }}</span>
-          </div>
-        </div>
+    <div class="profile-header">
+      <div class="prospect-identity">
+        <h2>{{ prospect.firstName }} {{ prospect.lastName }}</h2>
+        <p>{{ prospect.position }} | {{ prospect.college }} | {{ prospect.draftYear ?? 'Draft year TBD' }}</p>
       </div>
+      <div class="profile-actions">
+        <RouterLink to="/prospects" class="return-link">
+          <i class="pi pi-arrow-left" aria-hidden="true"></i>
+          <span>Return to Prospect List</span>
+        </RouterLink>
+        <Button label="Edit Prospect" icon="pi pi-pencil" @click="edit" />
+      </div>
+    </div>
 
-      <Accordion class="relationships-accordion">
-        <!-- Team Information -->
-        <AccordionTab v-if="relatedTeam" header="Current Team">
-          <div class="relationship-content">
-            <div class="info-row">
-              <span class="label">Team:</span>
-              <span>{{ relatedTeam.city }} {{ relatedTeam.name }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Conference:</span>
-              <span>{{ relatedTeam.conference }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Division:</span>
-              <span>{{ relatedTeam.division }}</span>
-            </div>
-          </div>
-        </AccordionTab>
+    <TabView>
+      <TabPanel header="Overview">
+        <div class="overview-grid">
+          <Card><template #title>Identity</template><template #content>
+            <dl><div><dt>Position</dt><dd>{{ prospect.position }}</dd></div><div><dt>College</dt><dd>{{ prospect.college }}</dd></div><div><dt>Draft Year</dt><dd>{{ prospect.draftYear ?? 'N/A' }}</dd></div><div><dt>Status</dt><dd><Tag :value="draftStatusLabel(prospect.draftStatus)" :severity="draftStatusSeverity(prospect.draftStatus)" /></dd></div></dl>
+          </template></Card>
+          <Card><template #title>Measurements</template><template #content>
+            <dl><div><dt>Height</dt><dd>{{ formatHeight(profile?.combine.height) }}</dd></div><div><dt>Weight</dt><dd>{{ formatValue(profile?.combine.weight, ' lbs') }}</dd></div><div><dt>Hand Size</dt><dd>{{ formatScoutingInches(profile?.combine.handSize) }}</dd></div><div><dt>Arm Length</dt><dd>{{ formatScoutingInches(profile?.combine.armLength) }}</dd></div></dl>
+          </template></Card>
+        </div>
+      </TabPanel>
 
-        <!-- Draft Pick Information -->
-        <AccordionTab v-if="relatedDraftPick" header="Draft Pick Details">
-          <div class="relationship-content">
-            <div class="info-row">
-              <span class="label">Draft Year:</span>
-              <span>{{ relatedDraftPick.draftYear }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Round:</span>
-              <span>{{ relatedDraftPick.round }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Pick Number:</span>
-              <span>{{ relatedDraftPick.pickNumber }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Combine Score:</span>
-              <span>{{ relatedDraftPick.combineScore }}</span>
-            </div>
-          </div>
-        </AccordionTab>
+      <TabPanel header="Combine">
+        <div v-if="profile?.combine && profile.combine.source !== 'NONE'" class="metric-grid combine-metric-grid">
+          <div><span>40-Yard Dash</span><strong>{{ formatValue(profile.combine.fortyTime, 's') }}</strong></div><div><span>10-Yard Split</span><strong>{{ formatValue(profile.combine.tenYardSplit, 's') }}</strong></div>
+          <div><span>Vertical Leap</span><strong>{{ formatValue(profile.combine.verticalLeap, '"') }}</strong></div><div><span>Broad Jump</span><strong>{{ formatValue(profile.combine.broadJump, '"') }}</strong></div>
+          <div><span>3-Cone</span><strong>{{ formatValue(profile.combine.threeCone, 's') }}</strong></div><div><span>20-Yard Shuttle</span><strong>{{ formatValue(profile.combine.twentyYardShuttle, 's') }}</strong></div>
+          <div><span>Bench Press</span><strong>{{ formatValue(profile.combine.benchPress, ' reps') }}</strong></div>
+          <div><span>Source</span><strong>CombineScore</strong></div>
+        </div>
+        <p v-else class="empty-state">No combine measurements are available for this prospect.</p>
+      </TabPanel>
 
-        <!-- Awards -->
-        <AccordionTab v-if="relatedAwards.length > 0" header="Awards & Honors">
-          <DataTable :value="relatedAwards" responsiveLayout="scroll">
-            <Column field="awardName" header="Award" />
-            <Column field="awardYear" header="Year" />
-            <Column field="awardDescription" header="Description" />
-          </DataTable>
-        </AccordionTab>
+      <TabPanel header="Production"><p class="empty-state">Production metrics will be integrated in a later NFL Draft Epic phase.</p></TabPanel>
 
-        <!-- Detailed Combine Scores -->
-        <AccordionTab v-if="relatedCombineScore" header="Detailed Combine Scores">
-          <div class="relationship-content">
-            <div class="info-row">
-              <span class="label">40-Yard Dash:</span>
-              <span>{{ formatTime(relatedCombineScore.fortyTime) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">10-Yard Split:</span>
-              <span>{{ formatTime(relatedCombineScore.tenYardSplit) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Vertical Leap:</span>
-              <span>{{ formatDistance(relatedCombineScore.verticalLeap) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Broad Jump:</span>
-              <span>{{ formatDistance(relatedCombineScore.broadJump) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">3-Cone Drill:</span>
-              <span>{{ formatTime(relatedCombineScore.threeCone) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">20-Yard Shuttle:</span>
-              <span>{{ formatTime(relatedCombineScore.twentyYardShuttle) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Bench Press:</span>
-              <span>{{ formatReps(relatedCombineScore.benchPress) }}</span>
-            </div>
-          </div>
-        </AccordionTab>
-      </Accordion>
-    </template>
-  </Card>
+      <TabPanel header="B4Me Analysis">
+        <div v-if="profile?.b4me" class="metric-grid">
+          <div><span>Final B4Me Score</span><strong>{{ formatValue(profile.b4me.finalB4MeScore) }}</strong></div><div><span>Scoring Mode</span><strong>{{ profile.b4me.scoringMode }}</strong></div>
+          <div><span>Coachability</span><strong>{{ profile.b4me.coachabilityTier ?? 'N/A' }}</strong></div><div><span>RFA Tier</span><strong>{{ profile.b4me.rfaTier ?? 'N/A' }}</strong></div><div><span>RVA Tier</span><strong>{{ profile.b4me.rvaTier ?? 'N/A' }}</strong></div>
+        </div>
+        <p v-else class="empty-state">No B4Me evaluation is available for this prospect.</p>
+      </TabPanel>
+
+      <TabPanel header="Scouting"><p class="empty-state">Scouting notes and evaluations will be integrated in a later NFL Draft Epic phase.</p></TabPanel>
+
+      <TabPanel header="Rankings">
+        <DataTable v-if="profile?.rankings.length" :value="profile.rankings" responsiveLayout="scroll"><Column field="source" header="Source"/><Column field="overallRank" header="Overall Rank"/><Column field="positionRank" header="Position Rank"/><Column field="grade" header="Grade"/></DataTable>
+        <p v-else class="empty-state">No rankings are available for this prospect.</p>
+      </TabPanel>
+
+      <TabPanel header="Draft History">
+        <DataTable v-if="profile?.draftHistory.length" :value="profile.draftHistory" responsiveLayout="scroll"><Column field="draftYear" header="Year"/><Column field="round" header="Round"/><Column field="pickNumber" header="Overall Pick"/><Column field="pickInRound" header="Pick in Round"/><Column field="status" header="Status"/><Column field="currentTeamId" header="Team ID"/></DataTable>
+        <p v-else class="empty-state">This prospect has not been associated with a DraftPick.</p>
+      </TabPanel>
+    </TabView>
+  </div>
 </template>
 
 <style scoped>
-.prospect-details {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.prospect-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.info-section h3 {
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-  border-bottom: 2px solid var(--border-color);
-  padding-bottom: 0.5rem;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  padding: 0.25rem 0;
-}
-
-.label {
-  font-weight: bold;
-  color: var(--text-primary);
-}
-
-.relationships-accordion {
-  margin-top: 2rem;
-}
-
-.relationship-content {
-  padding: 1rem 0;
-}
+.prospect-profile{width:100%}.page-title{margin:0 0 1rem;font-size:1.75rem;font-weight:600}.profile-header{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1rem}.prospect-identity{min-width:0}.profile-header h2{margin:0}.profile-header p{margin:.25rem 0 0;color:var(--text-color-secondary)}.profile-actions{display:flex;align-items:center;gap:1rem;flex-shrink:0}.return-link{display:inline-flex;align-items:center;gap:.45rem;color:var(--primary-color);font-weight:600;text-decoration:none;white-space:nowrap}.return-link:hover{text-decoration:underline}.overview-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}dl{margin:0}dl div{display:flex;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid var(--surface-border)}dt{font-weight:600}.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem}.metric-grid div{padding:1rem;border:1px solid var(--surface-border);border-radius:6px;display:flex;flex-direction:column;gap:.4rem;min-width:0}.metric-grid span{color:var(--text-color-secondary);font-size:.9rem}.combine-metric-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:.75rem}.combine-metric-grid div{padding:.75rem}.combine-metric-grid span{font-size:.8rem}.combine-metric-grid strong{font-size:.95rem;overflow-wrap:anywhere}.empty-state{padding:1.5rem;color:var(--text-color-secondary);text-align:center}@media (max-width:1100px){.combine-metric-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media (max-width:720px){.profile-header{align-items:flex-start;flex-direction:column}.profile-actions{width:100%;justify-content:space-between}.combine-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>

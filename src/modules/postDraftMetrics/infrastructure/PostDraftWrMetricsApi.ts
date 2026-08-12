@@ -14,7 +14,7 @@ function asProspects(value: unknown): Prospect[] {
 
 export const postDraftWrMetricsApi = {
   async searchProspects(draftYear: number, query: string): Promise<Prospect[]> {
-    const response = await apiService.get<unknown>('/prospects/filter', { draftYear, position: 'WR', name: query || undefined })
+    const response = await apiService.get<unknown>('/prospects', { draftYear, position: 'WR', playerName: query || undefined, page: 1, pageSize: 50 })
     return asProspects(response.data)
   },
   async getResolved(prospectId: number, draftYear: number): Promise<ResolvedWrMetrics> {
