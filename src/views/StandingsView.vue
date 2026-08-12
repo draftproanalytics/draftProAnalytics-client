@@ -46,7 +46,7 @@ import TabPanel from 'primevue/tabpanel'
 const store = useStandingsStore()
 const selectedYear = ref(2025)
 const selectedType = ref(2)
-const years = [2025, 2024, 2023]
+const years = [2028,2027,2026,2025]
 const seasonTypes = [
     { label: 'Regular', value: 2 },
     { label: 'Postseason', value: 3 },

@@ -18,12 +18,13 @@ const combineScoreId = computed(() => {
   return id ? parseInt(id as string) : null
 })
 
-const mode = computed(() => {
-  return (route.query.mode as string) || 'read'
-})
+const mode = computed(() => typeof route.query.mode === 'string' ? route.query.mode : 'read')
+
+const isCrudMode = (value: string): value is 'read' | 'create' | 'edit' | 'delete' =>
+  ['read', 'create', 'edit', 'delete'].includes(value)
 
 onMounted(async () => {
-  combineScoreStore.setMode(mode.value as any)
+  combineScoreStore.setMode(isCrudMode(mode.value) ? mode.value : 'read')
   if (combineScoreId.value) {
     await combineScoreStore.fetchById(combineScoreId.value)
   }
@@ -33,7 +34,7 @@ watch(
   () => route.query.mode,
   (newMode) => {
     if (newMode) {
-      combineScoreStore.setMode(newMode as any)
+      combineScoreStore.setMode(typeof newMode === 'string' && isCrudMode(newMode) ? newMode : 'read')
     }
   }
 )
@@ -54,10 +55,10 @@ watch(
   
     <div class="combine-score-detail-view">
       <!-- Show list when no ID -->
-      <CombineScoreList v-if="!combineScoreId" />
+      <CombineScoreCreateForm v-if="mode === 'create'" />
 
-      <!-- Show create form -->
-      <CombineScoreCreateForm v-else-if="mode === 'create'" />
+      <!-- Show list when no ID -->
+      <CombineScoreList v-else-if="!combineScoreId" />
 
       <!-- Show edit form -->
       <CombineScoreEditForm v-else-if="mode === 'edit'" />

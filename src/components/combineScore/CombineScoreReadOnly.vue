@@ -1,216 +1,85 @@
-<!-- src/components/combineScore/CombineScoreReadOnly.vue -->
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useCombineScoreStore } from '../../stores/combineScoreStore'
+import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import Button from 'primevue/button'
 import Card from 'primevue/card'
-import Accordion from 'primevue/accordion'
-import AccordionTab from 'primevue/accordiontab'
+import Tag from 'primevue/tag'
+import { useCombineScoreStore } from '@/stores/combineScoreStore'
+import { prospectService } from '@/services/prospectService'
+import type { Prospect } from '@/types'
+import {
+  formatDistanceMeasurement,
+  formatHeightMeasurement,
+  formatScoutingInches,
+  formatTimeMeasurement,
+  formatWeightMeasurement,
+} from '@/utils/scoutingMeasurements'
 
-const combineScoreStore = useCombineScoreStore()
+const store = useCombineScoreStore()
+const router = useRouter()
+const combineScore = computed(() => store.currentCombineScore)
+const prospect = ref<Prospect | null>(null)
 
-const combineScore = computed(() => combineScoreStore.currentCombineScore)
+watch(combineScore, async (score) => {
+  prospect.value = null
+  if (!score?.prospectId) return
+  try { prospect.value = await prospectService.getById(score.prospectId) } catch { prospect.value = null }
+}, { immediate: true })
 
-onMounted(async () => {
-  // Load any related data if needed
-})
-
-const formatTime = (time: number) => {
-  return time.toFixed(2) + 's'
-}
-
-const formatDistance = (distance: number) => {
-  return distance.toFixed(1) + '"'
-}
-
-const formatReps = (reps: number) => {
-  return reps.toString()
-}
+const fullName = computed(() => prospect.value ? `${prospect.value.firstName} ${prospect.value.lastName}` : 'Combine Measurements')
+const edit = () => { if (combineScore.value?.id) router.push(`/combine-scores/${combineScore.value.id}?mode=edit`) }
+const viewProspect = () => { if (prospect.value?.id) router.push(`/prospects/${prospect.value.id}`) }
+const formatReps = (value?: number) => value == null ? '—' : `${value} reps`
+const status = computed(() => combineScore.value?.isCompleteWorkout ? 'Complete' : 'Partial')
 </script>
 
 <template>
-  <Card v-if="combineScore" class="combine-score-details">
-    <template #title>
-      Combine Score for Player #{{ combineScore.playerId }}
-    </template>
-
-    <template #content>
-      <div class="combine-score-info-grid">
-        <div class="info-section">
-          <h3>Speed & Agility Tests</h3>
-          <div class="info-row">
-            <span class="label">40-Yard Dash:</span>
-            <span>{{ formatTime(combineScore.fortyTime) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">10-Yard Split:</span>
-            <span>{{ formatTime(combineScore.tenYardSplit) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">3-Cone Drill:</span>
-            <span>{{ formatTime(combineScore.threeCone) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">20-Yard Shuttle:</span>
-            <span>{{ formatTime(combineScore.twentyYardShuttle) }}</span>
-          </div>
-        </div>
-
-        <div class="info-section">
-          <h3>Power & Strength Tests</h3>
-          <div class="info-row">
-            <span class="label">Vertical Leap:</span>
-            <span>{{ formatDistance(combineScore.verticalLeap) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Broad Jump:</span>
-            <span>{{ formatDistance(combineScore.broadJump) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Bench Press:</span>
-            <span>{{ formatReps(combineScore.benchPress) }} reps</span>
-          </div>
-        </div>
-
-        <div class="info-section">
-          <h3>Performance Summary</h3>
-          <div class="info-row">
-            <span class="label">Player ID:</span>
-            <span>{{ combineScore.playerId }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Score ID:</span>
-            <span>{{ combineScore.id }}</span>
-          </div>
-        </div>
+  <section v-if="combineScore" class="combine-score-details">
+    <h1>Combine Score Profile</h1>
+    <div class="detail-header">
+      <div>
+        <h2>{{ fullName }}</h2>
+        <p v-if="prospect">{{ prospect.position }} | {{ prospect.college }} | {{ prospect.draftYear ?? 'Draft year TBD' }}</p>
       </div>
+      <div class="header-actions">
+        <RouterLink to="/combine-scores" class="return-link"><i class="pi pi-arrow-left" /> Return to Combine Scores</RouterLink>
+        <Button v-if="prospect" label="View Prospect" icon="pi pi-user" severity="secondary" outlined @click="viewProspect" />
+        <Button label="Edit Measurements" icon="pi pi-pencil" @click="edit" />
+      </div>
+    </div>
 
-      <Accordion class="relationships-accordion">
-        <AccordionTab header="Performance Analysis">
-          <div class="performance-analysis">
-            <div class="metric-category">
-              <h4>Speed Metrics</h4>
-              <p><strong>40-Yard Time:</strong> {{ formatTime(combineScore.fortyTime) }}</p>
-              <p><strong>Acceleration:</strong> {{ formatTime(combineScore.tenYardSplit) }} (10-yard split)</p>
-            </div>
-            
-            <div class="metric-category">
-              <h4>Agility Metrics</h4>
-              <p><strong>Change of Direction:</strong> {{ formatTime(combineScore.threeCone) }} (3-cone)</p>
-              <p><strong>Lateral Movement:</strong> {{ formatTime(combineScore.twentyYardShuttle) }} (20-yard shuttle)</p>
-            </div>
-            
-            <div class="metric-category">
-              <h4>Power & Strength</h4>
-              <p><strong>Vertical Explosion:</strong> {{ formatDistance(combineScore.verticalLeap) }}</p>
-              <p><strong>Horizontal Power:</strong> {{ formatDistance(combineScore.broadJump) }}</p>
-              <p><strong>Upper Body Strength:</strong> {{ formatReps(combineScore.benchPress) }} reps at 225 lbs</p>
-            </div>
-          </div>
-        </AccordionTab>
+    <div class="status-row"><Tag :value="status" :severity="combineScore.isCompleteWorkout ? 'success' : 'warning'" /></div>
 
-        <AccordionTab header="Test Descriptions">
-          <div class="test-descriptions">
-            <div class="test-description">
-              <h4>40-Yard Dash</h4>
-              <p>Measures straight-line speed and acceleration over 40 yards.</p>
-            </div>
-            
-            <div class="test-description">
-              <h4>10-Yard Split</h4>
-              <p>Time to reach 10 yards, measuring initial acceleration and burst.</p>
-            </div>
-            
-            <div class="test-description">
-              <h4>Vertical Leap</h4>
-              <p>Measures lower body explosive power and jumping ability.</p>
-            </div>
-            
-            <div class="test-description">
-              <h4>Broad Jump</h4>
-              <p>Tests horizontal explosive power and lower body strength.</p>
-            </div>
-            
-            <div class="test-description">
-              <h4>3-Cone Drill</h4>
-              <p>Tests agility, change of direction, and body control.</p>
-            </div>
-            
-            <div class="test-description">
-              <h4>20-Yard Shuttle</h4>
-              <p>Measures lateral quickness and change of direction speed.</p>
-            </div>
-            
-            <div class="test-description">
-              <h4>Bench Press</h4>
-              <p>Tests upper body strength with 225-pound repetitions.</p>
-            </div>
-          </div>
-        </AccordionTab>
-      </Accordion>
-    </template>
-  </Card>
+    <div class="measurement-grid">
+      <Card><template #title>Physical Measurements</template><template #content>
+        <dl>
+          <div><dt>Height</dt><dd>{{ formatHeightMeasurement(combineScore.height) }}</dd></div>
+          <div><dt>Weight</dt><dd>{{ formatWeightMeasurement(combineScore.weight) }}</dd></div>
+          <div><dt>Hand Size</dt><dd>{{ formatScoutingInches(combineScore.handSize) }}</dd></div>
+          <div><dt>Arm Length</dt><dd>{{ formatScoutingInches(combineScore.armLength) }}</dd></div>
+        </dl>
+      </template></Card>
+
+      <Card><template #title>Speed & Agility</template><template #content>
+        <dl>
+          <div><dt>40-Yard Dash</dt><dd>{{ formatTimeMeasurement(combineScore.fortyTime) }}</dd></div>
+          <div><dt>10-Yard Split</dt><dd>{{ formatTimeMeasurement(combineScore.tenYardSplit) }}</dd></div>
+          <div><dt>3-Cone Drill</dt><dd>{{ formatTimeMeasurement(combineScore.threeCone) }}</dd></div>
+          <div><dt>20-Yard Shuttle</dt><dd>{{ formatTimeMeasurement(combineScore.twentyYardShuttle) }}</dd></div>
+        </dl>
+      </template></Card>
+
+      <Card><template #title>Power & Strength</template><template #content>
+        <dl>
+          <div><dt>Vertical Leap</dt><dd>{{ formatDistanceMeasurement(combineScore.verticalLeap) }}</dd></div>
+          <div><dt>Broad Jump</dt><dd>{{ formatDistanceMeasurement(combineScore.broadJump) }}</dd></div>
+          <div><dt>Bench Press</dt><dd>{{ formatReps(combineScore.benchPress) }}</dd></div>
+        </dl>
+      </template></Card>
+    </div>
+  </section>
 </template>
 
 <style scoped>
-.combine-score-details {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.combine-score-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.info-section h3 {
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-  border-bottom: 2px solid var(--border-color);
-  padding-bottom: 0.5rem;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  padding: 0.25rem 0;
-}
-
-.label {
-  font-weight: bold;
-  color: var(--text-primary);
-}
-
-.relationships-accordion {
-  margin-top: 2rem;
-}
-
-.performance-analysis,
-.test-descriptions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-.metric-category,
-.test-description {
-  padding: 1rem;
-  background: var(--surface-ground);
-  border-radius: 6px;
-  border-left: 4px solid var(--primary-color);
-}
-
-.metric-category h4,
-.test-description h4 {
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.metric-category p,
-.test-description p {
-  margin-bottom: 0.25rem;
-  color: var(--text-secondary);
-}
+.combine-score-details{width:100%}.combine-score-details>h1{margin:0 0 1rem;font-size:1.75rem}.detail-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:.75rem}.detail-header h2{margin:0}.detail-header p{margin:.3rem 0 0;color:var(--text-color-secondary)}.header-actions{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}.return-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--primary-color);font-weight:600;text-decoration:none;white-space:nowrap}.return-link:hover{text-decoration:underline}.status-row{margin-bottom:1rem}.measurement-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}dl{margin:0}dl div{display:flex;justify-content:space-between;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--surface-border)}dt{font-weight:600}dd{margin:0;text-align:right}@media(max-width:1000px){.measurement-grid{grid-template-columns:1fr}.detail-header{flex-direction:column}}
 </style>

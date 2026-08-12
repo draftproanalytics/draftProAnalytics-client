@@ -127,31 +127,78 @@ export interface CreatePlayerTeam {
 
 
 
+export type ProspectDraftStatus = 'PRE_DRAFT' | 'DRAFTED' | 'UDFA'
+
 export interface Prospect {
   id?: number
+  fullName?: string
   firstName: string
   lastName: string
   position: string
   college: string
-  height: number
-  weight: number
-  handSize?: number
-  armLength?: number
   homeCity?: string
   homeState?: string
-  fortyTime?: number
-  tenYardSplit?: number
-  verticalLeap?: number
-  broadJump?: number
-  threeCone?: number
-  twentyYardShuttle?: number
-  benchPress?: number
   drafted: boolean
+  draftStatus?: ProspectDraftStatus
   draftYear?: number
   teamId?: number
   draftPickId?: number
+  hasCompleteCombineScores?: boolean
+  athleteScore?: number
   createdAt?: Date
   updatedAt?: Date
+}
+
+export interface ProspectListFilters {
+  draftYear?: number
+  position?: string
+  college?: string
+  playerName?: string
+}
+
+export interface ProspectRankingSummary {
+  source: string
+  overallRank: number
+  positionRank: number | null
+  grade: number | null
+}
+
+export interface ProspectProfile {
+  prospect: Prospect & { id: number; fullName: string }
+  combine: {
+    id: number | null
+    height: number | null
+    weight: number | null
+    handSize: number | null
+    armLength: number | null
+    fortyTime: number | null
+    tenYardSplit: number | null
+    twentyYardShuttle: number | null
+    threeCone: number | null
+    verticalLeap: number | null
+    broadJump: number | null
+    benchPress: number | null
+    source: 'COMBINE_SCORE' | 'NONE'
+  }
+  rankings: ProspectRankingSummary[]
+  b4me: {
+    scoringMode: string
+    coachabilityTier: string | null
+    rfaTier: string | null
+    rvaTier: string | null
+    finalB4MeScore: number | null
+    computedAt: string
+  } | null
+  draftHistory: Array<{
+    id: number
+    draftYear: number
+    round: number
+    pickInRound: number
+    pickNumber: number
+    status: string
+    currentTeamId: number
+    selectedAt: string | null
+  }>
 }
 
 export interface Team {
@@ -212,6 +259,7 @@ export interface DraftPick {
   round: number
   pickNumber: number
   playerId?: number
+  prospectId?: number
   teamId: number | undefined
   playerFirstName?: string
   playerLastName?: string
@@ -236,14 +284,59 @@ export interface DraftSelection {
 
 export interface CombineScore {
   id?: number
-  playerId: number
-  fortyTime: number
-  tenYardSplit: number
-  verticalLeap: number
-  broadJump: number
-  threeCone: number
-  twentyYardShuttle: number
-  benchPress: number
+  playerId?: number
+  prospectId?: number
+  height?: number
+  weight?: number
+  handSize?: number
+  armLength?: number
+  fortyTime?: number
+  tenYardSplit?: number
+  verticalLeap?: number
+  broadJump?: number
+  threeCone?: number
+  twentyYardShuttle?: number
+  benchPress?: number
+  overallAthleticScore?: number
+  isCompleteWorkout?: boolean
+}
+
+export type CombineMeasurementStatus = 'MISSING' | 'PARTIAL' | 'COMPLETE'
+
+export interface CombineScoreProspectSummary {
+  id: number
+  firstName: string
+  lastName: string
+  fullName: string
+  position: string
+  college: string
+  draftYear?: number
+  draftStatus?: ProspectDraftStatus
+}
+
+export interface CombineScoreWorkspaceItem {
+  prospect: CombineScoreProspectSummary
+  combineScore?: CombineScore
+  combineStatus: CombineMeasurementStatus
+}
+
+export interface CombineScoreWorkspaceFilters {
+  draftYear?: number
+  position?: string
+  college?: string
+  playerName?: string
+  combineStatus?: CombineMeasurementStatus
+  sortField?: 'name' | 'draftYear' | 'position' | 'college' | 'height' | 'weight' | 'handSize' | 'armLength' | 'fortyTime' | 'tenYardSplit' | 'verticalLeap' | 'broadJump' | 'threeCone' | 'twentyYardShuttle' | 'benchPress'
+  sortOrder?: 'asc' | 'desc'
+  page?: number
+  pageSize?: number
+}
+
+export interface CombineScoreWorkspacePagination {
+  page: number
+  limit: number
+  total: number
+  pages: number
 }
 
 // Additional types to add to src/types/index.ts

@@ -14,7 +14,7 @@ export const draftService = {
 
   async getAvailableProspects(year: number): Promise<Prospect[]> {
     const response = await axios.get(`${API_BASE}/prospects`, {
-      params: { draftYear: year, drafted: false }
+      params: { draftYear: year, draftStatus: 'PRE_DRAFT' }
     })
     return response.data.data
   },

@@ -1,75 +1,22 @@
 <!-- src/views/ProspectDetail.vue -->
 <script setup lang="ts">
-import { onMounted, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useProspectStore } from '@/stores/prospectStore'
-import AppLayout from '@/components/ui/AppLayout.vue'
 import ProspectList from '@/components/prospect/ProspectList.vue'
 import ProspectReadOnly from '@/components/prospect/ProspectReadOnly.vue'
 import ProspectCreateForm from '@/components/prospect/ProspectCreateForm.vue'
 import ProspectEditForm from '@/components/prospect/ProspectEditForm.vue'
 
-const route = useRoute()
-const router = useRouter()
-const prospectStore = useProspectStore()
-
-const prospectId = computed(() => {
-  const id = route.params.id
-  return id ? parseInt(id as string) : null
-})
-
-const mode = computed(() => {
-  return (route.query.mode as string) || 'read'
-})
-
-onMounted(async () => {
-  prospectStore.setMode(mode.value as any)
-  if (prospectId.value) {
-    await prospectStore.fetchById(prospectId.value)
-  }
-})
-
-watch(
-  () => route.query.mode,
-  (newMode) => {
-    if (newMode) {
-      prospectStore.setMode(newMode as any)
-    }
-  }
-)
-
-watch(
-  () => route.params.id,
-  async (newId) => {
-    if (newId) {
-      await prospectStore.fetchById(parseInt(newId as string))
-    } else {
-      prospectStore.clearCurrent()
-    }
-  }
-)
-</script>
-
-<template>
-  
-    <div class="prospect-detail-view">
-      <!-- Show list when no ID -->
-      <ProspectList v-if="!prospectId" />
-
-      <!-- Show create form -->
-      <ProspectCreateForm v-else-if="mode === 'create'" />
-
-      <!-- Show edit form -->
-      <ProspectEditForm v-else-if="mode === 'edit'" />
-
-      <!-- Show read-only view -->
-      <ProspectReadOnly v-else />
-    </div>
-  
-</template>
-
-<style scoped>
-.prospect-detail-view {
-  width: 100%;
+const route = useRoute(); const prospectStore = useProspectStore()
+const prospectId = computed(() => route.params.id ? Number(route.params.id) : null)
+const mode = computed(() => route.meta.prospectMode as 'list'|'create'|'read'|'edit' ?? 'list')
+const load = async () => {
+  if (prospectId.value && mode.value === 'read') await prospectStore.fetchProfile(prospectId.value)
+  else if (prospectId.value && mode.value === 'edit') await prospectStore.fetchById(prospectId.value)
+  else prospectStore.clearCurrent()
 }
-</style>
+onMounted(() => { void load() }); watch(() => route.fullPath, () => { void load() })
+</script>
+<template><div class="prospect-detail-view"><ProspectList v-if="mode === 'list'"/><ProspectCreateForm v-else-if="mode === 'create'"/><ProspectEditForm v-else-if="mode === 'edit'"/><ProspectReadOnly v-else/></div></template>
+<style scoped>.prospect-detail-view{width:100%}</style>
