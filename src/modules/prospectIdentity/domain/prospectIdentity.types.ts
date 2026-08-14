@@ -1,0 +1,6 @@
+export interface ProspectIdentitySummary { id:number; firstName:string; lastName:string; position:string; college:string; draftYear:number|null; homeCity:string|null; homeState:string|null }
+export interface DuplicateCandidate { id:number; left:ProspectIdentitySummary|null; right:ProspectIdentitySummary|null; matchScore:number; matchReasons:string[]; status:string; resolution:string|null; resolutionNotes:string|null; createdAt:string; reviewedAt:string|null }
+export interface IdentityReview { id:number; prospectId:number|null; candidateProspectId:number|null; provider:string; requestedName:string; resolvedName:string|null; confidenceScore:number|null; reason:string; status:string; createdAt:string; resolution:string|null; notes:string|null }
+export interface MergeConflict { relation:string; reason:string; survivor:unknown; duplicate:unknown }
+export interface MergePreview { survivor:ProspectIdentitySummary; duplicate:ProspectIdentitySummary; fieldsCopied:Record<string,unknown>; relationsToMove:Record<string,number>; conflicts:MergeConflict[]; dependencyCounts:Record<string,number> }
+export interface MergeAudit { id:number; survivorProspectId:number; duplicateProspectId:number; mergePolicy:string; fieldsCopiedJson:unknown; relationsMovedJson:unknown; conflictsJson:unknown; performedByPersonId:number|null; performedAt:string; reason:string }

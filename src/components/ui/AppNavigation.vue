@@ -377,6 +377,13 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
       icon: "pi pi-lock",
       items: [
         routeItem({
+          label: "Prospect Identity",
+          icon: "pi pi-id-card",
+          to: "/prospect-identity",
+          requiredPerm: { domain: "SCOUTING", action: "EDIT" },
+          adminOnly: true,
+        }),
+        routeItem({
           label: "User Admin",
           icon: "pi pi-users",
           to: "/admin/users",

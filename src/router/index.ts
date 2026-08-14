@@ -22,6 +22,7 @@ import PlayerAwardDetail from '@/views/PlayerAwardDetail.vue'
 import PlayerTeamDetail from '@/views/PlayerTeamDetail.vue'
 import CombineScoreDetail from '@/views/CombineScoreDetail.vue'
 import ProspectDetail from '@/views/ProspectDetail.vue'
+import ProspectIdentityManagementView from '@/modules/prospectIdentity/presentation/ProspectIdentityManagementView.vue'
 import GameDetail from '@/views/GameDetail.vue'
 import DraftBoard from '@/views/DraftboardView.vue'
 import ScheduleDetail from '@/views/GameScheduleView.vue'
@@ -93,6 +94,8 @@ function inferPermFromPath(path: string): RoutePermission | null {
   }
   if (path.startsWith('/admin/draft-pick-scraper')) return { domain: 'SCRAPERS', action: 'VIEW' }
   if (path.startsWith('/admin/users')) return { domain: 'ADMIN_USERS', action: 'VIEW' }
+
+  if (path.startsWith('/prospect-identity')) return { domain: 'SCOUTING', action: 'EDIT' }
 
   if (path.startsWith('/prospects') || path.startsWith('/combine-scores')) {
     return { domain: 'SCOUTING', action: 'VIEW' }
@@ -295,6 +298,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'prospects/new', name: 'ProspectCreate', component: ProspectDetail, beforeEnter: requireAuth, meta: { requiresAuth: true, prospectMode: 'create', perm: { domain: 'SCOUTING', action: 'CREATE' } } },
       { path: 'prospects/:id', name: 'ProspectDetail', component: ProspectDetail, beforeEnter: requireAuth, meta: { requiresAuth: true, prospectMode: 'read', perm: { domain: 'SCOUTING', action: 'VIEW' } } },
       { path: 'prospects/:id/edit', name: 'ProspectEdit', component: ProspectDetail, beforeEnter: requireAuth, meta: { requiresAuth: true, prospectMode: 'edit', perm: { domain: 'SCOUTING', action: 'EDIT' } } },
+      { path: 'prospect-identity', name: 'ProspectIdentityManagement', component: ProspectIdentityManagementView, beforeEnter: requireAuth, meta: { requiresAuth: true, perm: { domain: 'SCOUTING', action: 'EDIT' } } },
 
       {
         path: 'draft-board',
