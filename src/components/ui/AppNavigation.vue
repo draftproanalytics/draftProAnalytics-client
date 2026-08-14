@@ -332,7 +332,7 @@ const appMenuSpec = computed<readonly MenuItemWithPerm[]>(() => {
               label: "B4Me Analysis",
               icon: "pi pi-stopwatch",
               to: "/b4me-analysis",
-              requiredPerm: { domain: "DRAFT_TOOLS", action: "VIEW" },
+              requiredPerm: { domain: "B4ME_ANALYSIS", action: "VIEW" },
             }),
             routeItem({
               label: "Draft Analysis",

@@ -68,9 +68,6 @@ export const useB4MeAnalysisStore = defineStore('b4meAnalysis', () => {
         selectedProspectId.value = null;
       }
 
-      if (selectedProspectId.value === null && rows.value.length > 0) {
-        selectedProspectId.value = Number(rows.value[0].prospectId);
-      }
     } catch (unknownError) {
       error.value =
         unknownError instanceof Error

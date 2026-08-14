@@ -12,6 +12,7 @@ const VISITOR_VIEW_ALLOW: readonly DomainCode[] = [
   "STANDINGS",
   "PLAYOFFS",
   "DRAFT_ORDER",
+  "B4ME_ANALYSIS",
 ];
 
 function isPermissionMapReady(x: unknown): x is PermissionMap {

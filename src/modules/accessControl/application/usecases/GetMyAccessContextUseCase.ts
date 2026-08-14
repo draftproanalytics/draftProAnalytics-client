@@ -25,6 +25,7 @@ type RawRole = {
 
 const VALID_ACTIONS = new Set<string>(["VIEW", "CREATE", "EDIT", "DELETE", "RUN"]);
 const VALID_DOMAINS = new Set<string>([
+  "B4ME_ANALYSIS",
   "DASHBOARD",
   "GAMES",
   "PLAYERS",

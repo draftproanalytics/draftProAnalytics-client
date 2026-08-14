@@ -18,6 +18,7 @@ export type DomainCode =
   | "SCOUTING"
   | "PLAYER_MAINT"
   | "ADMIN_USERS"
+  | "B4ME_ANALYSIS"
   | "RBAC";
 
 export type AssignedRole = { rid: number; roleName: string };
