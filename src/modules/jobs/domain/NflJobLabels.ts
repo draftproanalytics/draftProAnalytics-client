@@ -60,6 +60,8 @@ export const getJobTypeLabel = (jobType: string): string => {
   if (jobType === DPA_JOB_TYPE.SYNC_POSTSEASON_RESULTS_FROM_GAMES) return 'Sync Postseason Results from Games';
   if (jobType === DPA_JOB_TYPE.GENERATE_TEAM_NEEDS) return 'Generate Team Needs';
   if (jobType === DPA_JOB_TYPE.IMPORT_NFLVERSE_PLAYER_PRODUCTION) return 'Import Player Performance';
+  if (jobType === DPA_JOB_TYPE.DETECT_PROSPECT_DUPLICATES) return 'Detect Prospect Duplicates';
+  if (jobType === DPA_JOB_TYPE.EVALUATE_B4ME_WR_PROSPECTS) return 'Evaluate B4Me WR Prospects';
 
   if (jobType === DPA_JOB_TYPE.PROCESS_JOB_QUEUE) {
     return 'Process Job Queue';
@@ -110,4 +112,6 @@ export const dpaJobTypeOptions: readonly { readonly label: string; readonly valu
   { label: 'Load ESPN Team Rosters', value: DPA_JOB_TYPE.LOAD_ESPN_TEAM_ROSTERS },
   { label: 'Sync Postseason Results from Games', value: DPA_JOB_TYPE.SYNC_POSTSEASON_RESULTS_FROM_GAMES },
   { label: 'Generate Team Needs', value: DPA_JOB_TYPE.GENERATE_TEAM_NEEDS },
+  { label: 'Detect Prospect Duplicates', value: DPA_JOB_TYPE.DETECT_PROSPECT_DUPLICATES },
+  { label: 'Evaluate B4Me WR Prospects', value: DPA_JOB_TYPE.EVALUATE_B4ME_WR_PROSPECTS },
 ];

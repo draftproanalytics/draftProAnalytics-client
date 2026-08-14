@@ -50,18 +50,104 @@ export interface B4MeDecisionViewDimensions {
   rva: number;
 }
 
+
+
+export interface B4MeMetricDisplayItem {
+  key: string;
+  label: string;
+  value: number | string | null;
+  unit: string | null;
+}
+
+export interface B4MeObservedMetrics {
+  sourceProvider: string | null;
+  sourcesUsed: string[];
+  metricSeasonYear: number | null;
+  seasonSelectionPolicy: string | null;
+  items: B4MeMetricDisplayItem[];
+  manualObservation: {
+    sourceName: string;
+    sourceUrl: string | null;
+    notes: string | null;
+    enteredByPersonId: number;
+    enteredAt: string;
+    fields: string[];
+  } | null;
+}
+
+export interface B4MeDerivedMetrics {
+  items: B4MeMetricDisplayItem[];
+  note: string;
+}
+
+export interface B4MeEvaluativeJudgment {
+  coachability: {
+    tier: string | null;
+    adjustment: number;
+    pressManSurvivability: string | null;
+    summary: string | null;
+  };
+  rfa: {
+    tier: string | null;
+    adjustment: number;
+    summary: string | null;
+  };
+  rva: {
+    tier: string | null;
+    score: number | null;
+  };
+  finalB4MeAssessment: {
+    score: number;
+    label: string;
+    explanation: string;
+    projectionNote: string | null;
+  };
+}
+export type B4MeResearchIndicatorStatus =
+  | 'HIT'
+  | 'MISS'
+  | 'DERIVED_ESTIMATE'
+  | 'UNVERIFIED'
+  | 'UNAVAILABLE';
+
+export interface B4MeResearchIndicatorItem {
+  key: string;
+  label: string;
+  value: number | null;
+  threshold: number;
+  comparison: string;
+  status: B4MeResearchIndicatorStatus | string;
+}
+
+export interface B4MeResearchIndicators {
+  methodologyVersion: string;
+  sourceProvider: string | null;
+  sourcesUsed: string[];
+  thresholdsMet: number;
+  sourceBackedMetricCount: number;
+  derivedMetricCount: number;
+  metricSeasonYear: number | null;
+  seasonSelectionPolicy: string | null;
+  items: B4MeResearchIndicatorItem[];
+}
+
 export interface B4MeEvaluationRow {
-  prospectId: string;
+  prospectId: number;
   playerName: string;
+  school: string | null;
   positionGroup: B4MePositionGroup;
   draftYear: number | null;
   baseScore: number;
   enhancedScore: number;
   decisionViewScore: number;
   scoreLabel: string;
-  scoreExplanation: B4MeScoreExplanation;
+  scoreExplanation: string;
   evaluationNotes: string | null;
   decisionViewDimensions: B4MeDecisionViewDimensions;
+  observedMetrics: B4MeObservedMetrics;
+  researchIndicators: B4MeResearchIndicators;
+  derivedMetrics: B4MeDerivedMetrics;
+  evaluativeJudgment: B4MeEvaluativeJudgment;
 }
 
 export interface B4MeEvaluationResponse {
@@ -69,4 +155,15 @@ export interface B4MeEvaluationResponse {
   methodology: B4MeMethodologyMetadata | null;
   activeFilterSummary: B4MeActiveFilterSummary;
   optionalTeamContext: B4MeOptionalTeamContext | null;
+}
+
+export interface ManualWrObservedMetricsRequest {
+  yprr: number;
+  pffOverallGrade: number;
+  contestedCatchRate: number;
+  behindLosTargetRate: number;
+  metricSeasonYear: number;
+  sourceName: string;
+  sourceUrl: string | null;
+  notes: string | null;
 }

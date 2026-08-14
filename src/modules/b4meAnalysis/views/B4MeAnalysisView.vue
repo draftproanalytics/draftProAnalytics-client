@@ -75,7 +75,23 @@
             <label for="teamContext">Include Team Context Placeholder</label>
           </div>
 
-          <Button label="Run Analysis" icon="pi pi-search" @click="runSearch" />
+          <Button label="Run Analysis" icon="pi pi-play" :disabled="jobSubmitting || jobRunning || !canEditObservedMetrics || positionGroup !== 'WR'" @click="runAnalysisJob" />
+        </div>
+
+        <div v-if="activeJobId !== null" class="job-progress">
+          <div class="job-progress-header">
+            <strong>B4Me WR Analysis — {{ draftYear }}</strong>
+            <span>Status: {{ activeJobStatus.toUpperCase() }}</span>
+          </div>
+          <ProgressBar :value="activeJobProgress" />
+          <div class="job-progress-details">
+            {{ activeJobProcessed }} / {{ activeJobTotal }} processed · {{ activeJobProgress }}%
+          </div>
+          <div v-if="activeJobStatus === 'completed' && activeJobResult !== null" class="job-result-details">
+            Evaluated: {{ resultCount('evaluated') }} · Reused: {{ resultCount('reused') }} ·
+            Identity review: {{ resultCount('identityReviewRequired') }} · Duplicate review: {{ resultCount('duplicateReviewRequired') }} ·
+            Provider unavailable: {{ resultCount('providerUnavailable') }} · Timeouts: {{ resultCount('providerTimeout') }} · Failed: {{ resultCount('failed') }}
+          </div>
         </div>
 
         <ActiveFilterSummaryBadges :summary="store.activeFilterSummary" />
@@ -109,10 +125,17 @@
           >
             <Column field="playerName" header="Player" />
             <Column field="positionGroup" header="Group" />
-            <Column field="baseScore" header="Base" />
-            <Column field="enhancedScore" header="Enhanced" />
-            <Column field="decisionViewScore" header="Decision View" />
-            <Column field="scoreLabel" header="Label" />
+            <Column header="Research Hits">
+              <template #body="slotProps">
+                {{ slotProps.data.researchIndicators.thresholdsMet }}/{{ slotProps.data.researchIndicators.sourceBackedMetricCount }}
+              </template>
+            </Column>
+            <Column header="B4Me Evaluation">
+              <template #body="slotProps">
+                {{ slotProps.data.evaluativeJudgment.finalB4MeAssessment.label }}
+                ({{ slotProps.data.evaluativeJudgment.finalB4MeAssessment.score }})
+              </template>
+            </Column>
           </DataTable>
         </template>
       </Card>
@@ -120,13 +143,23 @@
       <div class="side-stack">
         <B4MeProspectDetailPanel
           :row="store.selectedRow"
+          :can-edit-observed-metrics="canEditObservedMetrics"
           @show-explanation="openExplanation"
+          @edit-observed-metrics="openManualMetrics"
         />
         <MethodologyPanel :methodology="store.methodology" />
         <LimitationsPanel :methodology="store.methodology" />
         <TeamContextPlaceholderPanel :team-context="store.optionalTeamContext" />
       </div>
     </div>
+
+    <ManualWrObservedMetricsDialog
+      v-model:visible="manualMetricsVisible"
+      :row="store.selectedRow"
+      :saving="manualMetricsSaving"
+      :error="manualMetricsError"
+      @save="saveManualMetrics"
+    />
 
     <ScoreExplanationDrawer
       v-model:visible="scoreDrawerVisible"
@@ -136,8 +169,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Checkbox from 'primevue/checkbox';
@@ -148,14 +181,19 @@ import InputNumber from 'primevue/inputnumber';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 import ProgressSpinner from 'primevue/progressspinner';
+import ProgressBar from 'primevue/progressbar';
 import { useB4MeAnalysisStore } from '../stores/useB4MeAnalysisStore';
+import { can } from '@/modules/accessControl/application/can';
+import { enqueueB4MeWrEvaluation, readB4MeWrEvaluationJob, saveManualWrObservedMetrics } from '../services/b4meAnalysis.service';
 import type {
   B4MePositionGroup,
   B4MeScoringMode,
-  B4MeScoreExplanation
+  B4MeScoreExplanation,
+  ManualWrObservedMetricsRequest
 } from '../types/b4meAnalysis';
 import ActiveFilterSummaryBadges from '../components/ActiveFilterSummaryBadges.vue';
 import B4MeProspectDetailPanel from '../components/B4MeProspectDetailPanel.vue';
+import ManualWrObservedMetricsDialog from '../components/ManualWrObservedMetricsDialog.vue';
 import B4MeVersionBadge from '../components/B4MeVersionBadge.vue';
 import LimitationsPanel from '../components/LimitationsPanel.vue';
 import MethodologyPanel from '../components/MethodologyPanel.vue';
@@ -216,8 +254,43 @@ function parseRouteProspectId(value: unknown): number | null {
 }
 
 const route = useRoute();
-const router = useRouter();
 const store = useB4MeAnalysisStore();
+const canEditObservedMetrics = computed<boolean>(() => can('SCOUTING', 'EDIT'));
+const manualMetricsVisible = ref<boolean>(false);
+const manualMetricsSaving = ref<boolean>(false);
+const manualMetricsError = ref<string | null>(null);
+const jobSubmitting = ref<boolean>(false);
+const activeJobId = ref<number | null>(null);
+const activeJobStatus = ref<string>('idle');
+const activeJobProgress = ref<number>(0);
+const activeJobTotal = ref<number>(0);
+const activeJobProcessed = ref<number>(0);
+const activeJobResult = ref<Record<string, unknown> | null>(null);
+const jobRunning = computed<boolean>(() => activeJobStatus.value === 'pending' || activeJobStatus.value === 'in_progress');
+let jobPollTimer: ReturnType<typeof setTimeout> | null = null;
+
+function openManualMetrics(): void {
+  manualMetricsError.value = null;
+  manualMetricsVisible.value = true;
+}
+
+async function saveManualMetrics(request: ManualWrObservedMetricsRequest): Promise<void> {
+  if (store.selectedRow === null) return;
+  manualMetricsSaving.value = true;
+  manualMetricsError.value = null;
+  try {
+    await saveManualWrObservedMetrics(store.selectedRow.prospectId, request);
+    manualMetricsVisible.value = false;
+    await runSearch();
+    store.setSelectedProspectId(store.selectedRow?.prospectId ?? null);
+  } catch (error) {
+    const axiosLike = error as { response?: { data?: { message?: string } } };
+    manualMetricsError.value = axiosLike.response?.data?.message ?? (error instanceof Error ? error.message : 'Unable to save manual WR metrics.');
+  } finally {
+    manualMetricsSaving.value = false;
+  }
+}
+
 
 const positionOptions: Array<{ label: string; value: B4MePositionGroup }> = [
   { label: 'Wide Receiver', value: 'WR' },
@@ -272,26 +345,78 @@ const includeTeamContextPlaceholder = ref<boolean>(
 const scoreDrawerVisible = ref<boolean>(false);
 
 const activeExplanation = computed<B4MeScoreExplanation | null>(() => {
-  return store.selectedRow?.scoreExplanation ?? null;
+  const row = store.selectedRow;
+  if (!row) return null;
+
+  return {
+    title: `${row.playerName} B4Me evaluation`,
+    summary: row.evaluativeJudgment.finalB4MeAssessment.explanation,
+    lines: row.evaluativeJudgment.finalB4MeAssessment.projectionNote
+      ? [row.evaluativeJudgment.finalB4MeAssessment.projectionNote]
+      : []
+  };
 });
 
-async function runSearch(): Promise<void> {
-  const selectedProspectIdForRoute: number | null = store.selectedProspectId;
+async function runAnalysisJob(): Promise<void> {
+  if (draftYear.value === null || positionGroup.value !== 'WR') return;
+  jobSubmitting.value = true;
+  try {
+    const job = await enqueueB4MeWrEvaluation({
+      draftYear: draftYear.value,
+      positionGroup: 'WR',
+      refreshPolicy: 'MISSING_OR_STALE',
+      scoringMode: scoringMode.value
+    });
+    activeJobId.value = job.id;
+    activeJobStatus.value = job.status;
+    activeJobProgress.value = job.progressPercent;
+    activeJobTotal.value = job.totalItems;
+    activeJobProcessed.value = job.processedItems;
+    activeJobResult.value = job.resultJson;
+    scheduleJobPoll();
+  } catch (error) {
+    const axiosLike = error as { response?: { data?: { message?: string } } };
+    store.error = axiosLike.response?.data?.message ?? (error instanceof Error ? error.message : 'Unable to submit B4Me analysis job.');
+  } finally {
+    jobSubmitting.value = false;
+  }
+}
 
-  await router.replace({
-    query: {
-      positionGroup: positionGroup.value,
-      draftYear: draftYear.value ?? undefined,
-      playerName: playerName.value.trim().length > 0 ? playerName.value.trim() : undefined,
-      scoringMode: scoringMode.value,
-      limitationFiltersEnabled: String(limitationFiltersEnabled.value),
-      decisionViewEnabled: String(decisionViewEnabled.value),
-      includeMethodology: String(includeMethodology.value),
-      includeTeamContextPlaceholder: String(includeTeamContextPlaceholder.value),
-      prospectId: selectedProspectIdForRoute ?? undefined
+
+function resultCount(key: string): number {
+  const value = activeJobResult.value?.[key];
+  return typeof value === 'number' ? value : 0;
+}
+
+function scheduleJobPoll(): void {
+  if (jobPollTimer !== null) clearTimeout(jobPollTimer);
+  jobPollTimer = setTimeout(() => { void pollActiveJob(); }, 1500);
+}
+
+async function pollActiveJob(): Promise<void> {
+  if (activeJobId.value === null) return;
+  try {
+    const job = await readB4MeWrEvaluationJob(activeJobId.value);
+    activeJobStatus.value = job.status;
+    activeJobProgress.value = job.progressPercent;
+    activeJobTotal.value = job.totalItems;
+    activeJobProcessed.value = job.processedItems;
+    activeJobResult.value = job.resultJson;
+    if (job.status === 'completed') {
+      await runSearch();
+      return;
     }
-  });
+    if (job.status === 'failed' || job.status === 'canceled') {
+      store.error = job.errorMessage ?? `B4Me analysis job ${job.status}.`;
+      return;
+    }
+    scheduleJobPoll();
+  } catch (error) {
+    store.error = error instanceof Error ? error.message : 'Unable to read B4Me analysis job status.';
+  }
+}
 
+async function runSearch(): Promise<void> {
   await store.load({
     draftYear: draftYear.value,
     playerName: playerName.value.trim().length > 0 ? playerName.value.trim() : null,
@@ -316,26 +441,11 @@ async function runSearch(): Promise<void> {
     enableRvaAdjustment: decisionViewEnabled.value
   });
 
-  const routeProspectId: number | null = parseRouteProspectId(route.query.prospectId);
-
-  if (
-    routeProspectId !== null &&
-    store.rows.some((row) => Number(row.prospectId) === routeProspectId)
-  ) {
-    store.setSelectedProspectId(routeProspectId);
-  }
 }
 
 function onRowClick(event: DataTableRowClickEvent): void {
   const row = event.data as { prospectId: number };
   store.setSelectedProspectId(row.prospectId);
-
-  void router.replace({
-    query: {
-      ...route.query,
-      prospectId: String(row.prospectId)
-    }
-  });
 }
 
 function openExplanation(prospectId: number | string): void {
@@ -349,16 +459,21 @@ function openExplanation(prospectId: number | string): void {
   scoreDrawerVisible.value = true;
 }
 
-watch(
-  () => route.query.prospectId,
-  (value) => {
-    const parsedProspectId: number | null = parseRouteProspectId(value);
-    store.setSelectedProspectId(parsedProspectId);
-  }
-);
+onBeforeUnmount(() => {
+  if (jobPollTimer !== null) clearTimeout(jobPollTimer);
+});
 
 onMounted(async () => {
+  const initialProspectId: number | null = parseRouteProspectId(route.query.prospectId);
+
   await runSearch();
+
+  if (
+    initialProspectId !== null &&
+    store.rows.some((row) => Number(row.prospectId) === initialProspectId)
+  ) {
+    store.setSelectedProspectId(initialProspectId);
+  }
 });
 </script>
 
@@ -419,6 +534,24 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.job-progress {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.job-progress-header,
+.job-result-details {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.job-progress-details {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .content-grid {
