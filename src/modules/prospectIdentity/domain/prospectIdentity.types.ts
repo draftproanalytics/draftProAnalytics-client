@@ -4,3 +4,5 @@ export interface IdentityReview { id:number; prospectId:number|null; candidatePr
 export interface MergeConflict { relation:string; reason:string; survivor:unknown; duplicate:unknown }
 export interface MergePreview { survivor:ProspectIdentitySummary; duplicate:ProspectIdentitySummary; fieldsCopied:Record<string,unknown>; relationsToMove:Record<string,number>; conflicts:MergeConflict[]; dependencyCounts:Record<string,number> }
 export interface MergeAudit { id:number; survivorProspectId:number; duplicateProspectId:number; mergePolicy:string; fieldsCopiedJson:unknown; relationsMovedJson:unknown; conflictsJson:unknown; performedByPersonId:number|null; performedAt:string; reason:string }
+
+export interface ProspectIdentityPreflightStatus { draftYear:number; position:string; prospectCount:number; scanState:'NEVER_RUN'|'STALE'|'CURRENT'; latestCompletedScanAt:string|null; latestProspectChangeAt:string|null; unresolvedDuplicateCount:number; unresolvedIdentityCount:number }
