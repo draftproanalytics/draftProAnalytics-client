@@ -8,6 +8,17 @@ export interface PaginationMeta {
   totalPages: number
 }
 
+
+export type PlayerSortField = 'firstName' | 'lastName' | 'position' | 'university'
+
+export interface PlayerListQuery {
+  page?: number
+  limit?: number
+  search?: string
+  sortField?: PlayerSortField
+  sortOrder?: 1 | -1
+}
+
 export interface TeamStatistics {
   overallRecord: { wins: number; losses: number; ties: number }
   conferenceRecord: { wins: number; losses: number; ties: number }
@@ -19,8 +30,14 @@ export interface TeamStatistics {
 export class PlayerService {
   private readonly endpoint = '/players'
 
-  async getAll(page = 1, limit = 10): Promise<{ data: Player[]; pagination: PaginationMeta }> {
-    const response = await apiService.get<ApiResponse<Player[]>>(this.endpoint, { page, limit })
+  async getAll(query: PlayerListQuery = {}): Promise<{ data: Player[]; pagination: PaginationMeta }> {
+    const response = await apiService.get<ApiResponse<Player[]>>(this.endpoint, {
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      search: query.search?.trim() || undefined,
+      sortField: query.sortField,
+      sortOrder: query.sortOrder,
+    })
     return {
       data: response.data.data,
       pagination: response.data.pagination as PaginationMeta,

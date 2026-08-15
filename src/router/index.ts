@@ -147,11 +147,7 @@ const routes: RouteRecordRaw[] = [
         path: '/b4me-analysis',
         name: 'b4me-analysis',
         component: B4MeAnalysisView,
-        meta: {
-          requiresAuth: true,
-          domain: 'DRAFT_TOOLS',
-          action: 'VIEW',
-        },
+        meta: { requiresAuth: true, perm: { domain: 'B4ME_ANALYSIS', action: 'VIEW' } },
       },
       // Draft Simulator
       {
