@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { playerService } from '@/services/playerService'
+import type { PlayerSortField } from '@/services/playerService'
 import type { Player, CrudMode } from '@/types'
 
 export const usePlayerStore = defineStore('player', () => {
@@ -12,6 +13,9 @@ export const usePlayerStore = defineStore('player', () => {
   const page = ref(1)
   const rowsPerPage = ref(10)
   const totalRecords = ref(0)
+  const searchTerm = ref('')
+  const sortField = ref<PlayerSortField | undefined>(undefined)
+  const sortOrder = ref<1 | -1 | undefined>(undefined)
 
   const getPlayerById = computed(() => (id: number) => players.value.find((player) => player.id === id))
   const getPlayersByTeam = computed(() => (teamId: number) => players.value.filter((player) => player.team?.id === teamId))
@@ -21,7 +25,13 @@ export const usePlayerStore = defineStore('player', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await playerService.getAll(requestedPage, requestedLimit)
+      const response = await playerService.getAll({
+        page: requestedPage,
+        limit: requestedLimit,
+        search: searchTerm.value,
+        sortField: sortField.value,
+        sortOrder: sortOrder.value,
+      })
       players.value = response.data
       page.value = response.pagination.page
       rowsPerPage.value = response.pagination.limit
@@ -64,13 +74,20 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   const searchByName = async (name: string): Promise<Player[]> => {
-    loading.value = true
-    error.value = null
-    try {
-      return await playerService.getByName(name)
-    } finally {
-      loading.value = false
-    }
+    searchTerm.value = name.trim()
+    await fetchPage(1, rowsPerPage.value)
+    return players.value
+  }
+
+  const clearSearch = async (): Promise<void> => {
+    searchTerm.value = ''
+    await fetchPage(1, rowsPerPage.value)
+  }
+
+  const setSort = async (field?: PlayerSortField, order?: 1 | -1): Promise<void> => {
+    sortField.value = field
+    sortOrder.value = order
+    await fetchPage(1, rowsPerPage.value)
   }
 
   const create = async (playerData: Omit<Player, 'id'>): Promise<Player> => {
@@ -114,8 +131,9 @@ export const usePlayerStore = defineStore('player', () => {
 
   return {
     players, currentPlayer, loading, error, mode, page, rowsPerPage, totalRecords,
+    searchTerm, sortField, sortOrder,
     getPlayerById, getPlayersByTeam, getPlayersByPosition,
-    fetchAll, fetchPage, fetchById, searchByName, create, update, remove,
+    fetchAll, fetchPage, fetchById, searchByName, clearSearch, setSort, create, update, remove,
     setMode: (newMode: CrudMode) => { mode.value = newMode },
     clearCurrent: () => { currentPlayer.value = null },
     clearError: () => { error.value = null },
