@@ -202,6 +202,7 @@ function parseRouteProspectId(value: unknown): number | null {
 }
 
 const route = useRoute();
+const router = useRouter();
 const store = useB4MeAnalysisStore();
 const canEditObservedMetrics = computed<boolean>(() => can('SCOUTING', 'EDIT'));
 const manualMetricsVisible = ref(false);
