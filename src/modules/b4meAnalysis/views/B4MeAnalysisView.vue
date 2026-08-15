@@ -45,7 +45,7 @@
             <div class="toggle"><Checkbox v-model="includeMethodology" binary inputId="methodology" /><label for="methodology">Include Methodology</label></div>
             <div class="toggle"><Checkbox v-model="includeTeamContextPlaceholder" binary inputId="teamContext" /><label for="teamContext">Include Team Context</label></div>
           </div>
-          <Button label="Run Analysis" icon="pi pi-play" :disabled="jobSubmitting || jobRunning || !canEditObservedMetrics || positionGroup !== 'WR'" @click="requestRunAnalysis" />
+          <Button label="Run Analysis" icon="pi pi-play" :disabled="jobSubmitting || jobRunning || !canRunAnalysis || positionGroup !== 'WR'" @click="requestRunAnalysis" />
         </div>
 
         <div v-if="activeJobId !== null" class="job-progress">
@@ -143,7 +143,7 @@
       <template #footer>
         <Button label="Cancel" severity="secondary" text @click="preflightVisible = false" />
         <Button label="Continue B4Me Analysis" severity="secondary" outlined :disabled="jobSubmitting" @click="continueAfterPreflight" />
-        <Button label="Run Duplicate Check First" icon="pi pi-search" :loading="duplicateScanSubmitting" @click="runDuplicateCheckFirst" />
+        <Button v-if="canManageProspectIdentity" label="Run Duplicate Check First" icon="pi pi-search" :loading="duplicateScanSubmitting" @click="runDuplicateCheckFirst" />
       </template>
     </Dialog>
 
@@ -202,8 +202,11 @@ function parseRouteProspectId(value: unknown): number | null {
 }
 
 const route = useRoute();
+const router = useRouter();
 const store = useB4MeAnalysisStore();
-const canEditObservedMetrics = computed<boolean>(() => can('SCOUTING', 'EDIT'));
+const canRunAnalysis = computed<boolean>(() => can('B4ME_ANALYSIS', 'RUN'));
+const canManageProspectIdentity = computed<boolean>(() => can('SCOUTING', 'EDIT'));
+const canEditObservedMetrics = computed<boolean>(() => can('B4ME_ANALYSIS', 'EDIT'));
 const manualMetricsVisible = ref(false);
 const manualMetricsSaving = ref(false);
 const manualMetricsError = ref<string | null>(null);
