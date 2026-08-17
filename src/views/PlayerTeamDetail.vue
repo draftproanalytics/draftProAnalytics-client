@@ -4,10 +4,7 @@
 import { onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePlayerTeamStore } from '@/stores/playerTeamStore'
-import AppLayout from '@/components/ui/AppLayout.vue'
-import RosterPlayerList from '@/modules/roster/presentation/components/RosterPlayerList.vue'
-import RosterPlaterReadOnly from '@/modules/roster/presentation/components/RosterPLayerReadOnly.vue'
-import RosterPlayerCreateForm from '@/modules/roster/presentation/components/RosterPlayerCreateForm.vue'
+
 import RosterPlayerEditForm from '@/modules/roster/presentation/components/RosterPlayerEditForm.vue'
 
 const route = useRoute()

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@prisma/client": "^7.2.0",
+    "@sentry/vue": "^10.70.0",
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
     "date-fns": "^4.1.0",
@@ -52,7 +53,7 @@
   "_moduleAliases": {
     "@": "./dist/src"
   },
-  "description": "DraftProAnalytics\u2122 web client",
+  "description": "DraftProAnalytics™ web client",
   "author": "Darryl Thompson",
   "license": "UNLICENSED"
 }
