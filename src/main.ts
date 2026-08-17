@@ -62,15 +62,22 @@ const bugsinkEnabled = import.meta.env.VITE_SENTRY_ENABLED === 'true'
 
 const bugsinkDsn = import.meta.env.VITE_SENTRY_DSN?.trim()
 
+const bugsinkEnvironment =
+  import.meta.env.VITE_APP_ENV ??
+  import.meta.env.MODE
+
 if (bugsinkEnabled && bugsinkDsn) {
   Sentry.init({
     app,
     dsn: bugsinkDsn,
-    environment: import.meta.env.MODE,
+    environment: bugsinkEnvironment,
+    release: __DPA_RELEASE__,
     sendDefaultPii: false,
   })
 
-  console.info(`[bugsink] client error reporting enabled for ${import.meta.env.MODE}`)
+  console.info(
+    `[bugsink] client error reporting enabled for ${bugsinkEnvironment}; release=${__DPA_RELEASE__}`,
+  )
 } else {
   console.info('[bugsink] client error reporting disabled')
 }
