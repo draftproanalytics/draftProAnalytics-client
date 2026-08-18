@@ -71,6 +71,14 @@ if (bugsinkEnabled && bugsinkDsn) {
     environment: bugsinkEnvironment,
     release: __DPA_RELEASE__,
     sendDefaultPii: false,
+    attachStacktrace: true,
+
+    // Capture handled errors that DPA intentionally logs with console.error().
+    // Uncaught JS errors, unhandled promise rejections, and Vue errors continue
+    // to be captured by the SDK's default integrations.
+    integrations: [
+      Sentry.captureConsoleIntegration({ levels: ['error'] }),
+    ],
 
     beforeSend(event) {
       if (event.request) {
