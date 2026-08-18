@@ -12,16 +12,18 @@ export const regularSeasonWeekOptions: readonly WeekOption[] = Array.from({ leng
   value: index + 1,
 }));
 
-export const preseasonWeekOptions: readonly WeekOption[] = Array.from({ length: 4 }, (_, index) => ({
-  label: `Pre ${index + 1}`,
-  value: index + 1,
-}));
+export const preseasonWeekOptions: readonly WeekOption[] = [
+  { label: 'Hall of Fame Game', value: 0 },
+  { label: 'Preseason Week 1', value: 1 },
+  { label: 'Preseason Week 2', value: 2 },
+  { label: 'Preseason Week 3', value: 3 },
+];
 
 export const postseasonWeekOptions: readonly WeekOption[] = [
   { label: 'Wild Card', value: 1 },
   { label: 'Divisional', value: 2 },
   { label: 'Conference Championship', value: 3 },
-  { label: 'Pro Bowl', value: 4 },,
+  { label: 'Pro Bowl', value: 4 },
   { label: 'Super Bowl', value: 5 }
   
 ];

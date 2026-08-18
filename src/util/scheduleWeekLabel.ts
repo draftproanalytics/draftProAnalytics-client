@@ -31,6 +31,7 @@ function getPreseasonWeekFromEncodedWeek(gameWeek: number): number | null {
  * Formats an NFL schedule week for display.
  *
  * Supported inputs:
+ * - seasonType = 1 with gameWeek 0 => "Hall of Fame Game"
  * - seasonType = 1 with gameWeek 1..3 => "Pre 1".."Pre 3"
  * - encoded preseason gameWeek 101..103 => "Pre 1".."Pre 3"
  * - encoded preseason gameWeek -1..-3 => "Pre 1".."Pre 3"
@@ -50,7 +51,10 @@ export function formatScheduleWeekLabel(
   const encodedPreseasonWeek = getPreseasonWeekFromEncodedWeek(week)
   if (encodedPreseasonWeek !== null) return `Pre ${encodedPreseasonWeek}`
 
-  if (isPreseasonSeasonType(seasonType)) return `Pre ${week}`
+  if (isPreseasonSeasonType(seasonType)) {
+    if (week === 0) return 'Hall of Fame Game'
+    return `Pre ${week}`
+  }
 
   return String(week)
 }

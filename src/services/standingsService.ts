@@ -7,7 +7,7 @@ const endpoint = '/standings'
 /**
  * Fetch team standings for a given year and season type.
  * @param year - Season year (e.g. 2025)
- * @param seasonType - Season type (2 = regular, 3 = postseason)
+ * @param seasonType - Season type (1 = preseason, 2 = regular, 3 = postseason)
  */
 export async function fetchStandings(
   year: number,

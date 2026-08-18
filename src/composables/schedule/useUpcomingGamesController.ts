@@ -18,16 +18,17 @@ export function useUpcomingGamesController() {
   // ---------------------------------------------
   const selectedYear = ref(2025)
   const selectedSeasonType = ref(2)
-  const selectedWeek = ref(0)
+  const selectedWeek = ref<number | null>(1)
   const isAllPreseasonSelected = computed(
-    () => selectedSeasonType.value === 1 && selectedWeek.value === 0
+    () => selectedSeasonType.value === 1 && selectedWeek.value === null
   )
 
   // Week options based on season type
   const weekOptions = computed<number[]>(() => {
     switch (selectedSeasonType.value) {
       case 1:
-        return Array.from({ length: 3 }, (_, i) => i + 1)
+        // DPA-facing preseason weeks: 0 = Hall of Fame Game, 1..3 = preseason weeks.
+        return Array.from({ length: 4 }, (_, i) => i)
       case 2:
         return Array.from({ length: 18 }, (_, i) => i + 1)
       case 3:
@@ -166,6 +167,10 @@ export function useUpcomingGamesController() {
       return
     }
 
+    if (selectedWeek.value === null) {
+      return
+    }
+
     loading.value = true
     const raw = selectedSeasonType.value
 
@@ -243,6 +248,11 @@ export function useUpcomingGamesController() {
   // ---------------------------------------------
   // WATCH LIVE GAMES
   // ---------------------------------------------
+  watch(selectedSeasonType, seasonType => {
+    if (seasonType === 1) selectedWeek.value = null
+    else selectedWeek.value = 1
+  })
+
   watch(hasLiveGames, live => {
     if (live) startProgressTimer()
     else stopAutoRefresh()

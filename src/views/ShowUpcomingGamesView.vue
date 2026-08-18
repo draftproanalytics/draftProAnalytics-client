@@ -1,24 +1,30 @@
 <!-- src/views/ShowUpcomingGamesView.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useUpcomingGamesController } from '@/composables/schedule/useUpcomingGamesController';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers';
 import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue';
 import TeamBadge from '@/components/team/TeamBadge.vue';
+import { preseasonWeekOptions } from '@/modules/jobs/domain/NflJobLabels';
 
 const controller = useUpcomingGamesController();
 const { loading, runImportScoresWeek } = controller;
 
-const staticWeekOptions: { label: string; value: number }[] = [
-  { label: 'Preseason', value: 0 },
-  ...Array.from({ length: 22 }, (_, i) => ({
-    label: `Week ${i + 1}`,
-    value: i + 1,
-  })),
-  
-];
+const displayedWeekOptions = computed<{ label: string; value: number | null }[]>(() => {
+  switch (Number(controller.selectedSeasonType.value)) {
+    case 1:
+      return [
+        { label: 'All Preseason', value: null },
+        ...preseasonWeekOptions,
+      ];
+    case 3:
+      return Array.from({ length: 5 }, (_, i) => ({ label: `Postseason Week ${i + 1}`, value: i + 1 }));
+    default:
+      return Array.from({ length: 18 }, (_, i) => ({ label: `Week ${i + 1}`, value: i + 1 }));
+  }
+});
 
 const selectedGameId = ref<number | null>(null);
 const gameDetailsVisible = ref(false);
@@ -51,14 +57,14 @@ onMounted(() => {
 
       <!-- SEASON TYPE -->
       <select v-model="controller.selectedSeasonType.value" class="control-select">
-        <option value="1">Preseason</option>
-        <option value="2">Regular Season</option>
-        <option value="3">Postseason</option>
+        <option :value="1">Preseason</option>
+        <option :value="2">Regular Season</option>
+        <option :value="3">Postseason</option>
       </select>
 
       <!-- WEEK -->
       <select v-model="controller.selectedWeek.value" class="control-select">
-        <option v-for="opt in staticWeekOptions" :key="opt.value" :value="opt.value">
+        <option v-for="opt in displayedWeekOptions" :key="opt.value ?? 'all-preseason'" :value="opt.value">
           {{ opt.label }}
         </option>
       </select>
