@@ -1,7 +1,7 @@
 {
   "name": "sports_mgmt_app_client",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@prisma/client": "^7.2.0",
+    "@sentry/vue": "^10.70.0",
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
     "date-fns": "^4.1.0",
@@ -30,6 +31,7 @@
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@sentry/vite-plugin": "^5.4.0",
     "@types/node": "^20.19.11",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
@@ -52,7 +54,7 @@
   "_moduleAliases": {
     "@": "./dist/src"
   },
-  "description": "DraftProAnalytics\u2122 web client",
+  "description": "DraftProAnalytics™ web client",
   "author": "Darryl Thompson",
   "license": "UNLICENSED"
 }
