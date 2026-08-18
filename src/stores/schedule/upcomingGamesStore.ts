@@ -17,18 +17,18 @@ export const useUpcomingScheduleStore = defineStore('upcomingSchedule', {
      * Fetches upcoming schedule for the given year/type/week
      * then normalizes to UI-ready models.
      */
-    async fetchUpcomingGames(seasonYear: number, seasonType: number, week: number) {
+    async fetchUpcomingGames(seasonYear: number, seasonType: number, week: number | null) {
       this.isLoading = true
       this.error = null
 
       try {
-        const { data } = await api.get(`/schedules/upcomingSchedule`, {
-          params: {
-            seasonYear,
-            seasonType,
-            week,
-          },
-        })
+        const params: { seasonYear: number; seasonType: number; week?: number } = {
+          seasonYear,
+          seasonType,
+        }
+        if (week !== null) params.week = week
+
+        const { data } = await api.get(`/schedules/upcomingSchedule`, { params })
 
         if (!data?.events || !Array.isArray(data.events)) {
           this.games = []

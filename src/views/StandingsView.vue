@@ -48,6 +48,7 @@ const selectedYear = ref(2025)
 const selectedType = ref(2)
 const years = [2028,2027,2026,2025]
 const seasonTypes = [
+    { label: 'Preseason', value: 1 },
     { label: 'Regular', value: 2 },
     { label: 'Postseason', value: 3 },
 ]
