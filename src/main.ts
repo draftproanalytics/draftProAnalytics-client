@@ -62,9 +62,7 @@ const bugsinkEnabled = import.meta.env.VITE_SENTRY_ENABLED === 'true'
 
 const bugsinkDsn = import.meta.env.VITE_SENTRY_DSN?.trim()
 
-const bugsinkEnvironment =
-  import.meta.env.VITE_APP_ENV ??
-  import.meta.env.MODE
+const bugsinkEnvironment = import.meta.env.VITE_APP_ENV ?? import.meta.env.MODE
 
 if (bugsinkEnabled && bugsinkDsn) {
   Sentry.init({
@@ -73,10 +71,39 @@ if (bugsinkEnabled && bugsinkDsn) {
     environment: bugsinkEnvironment,
     release: __DPA_RELEASE__,
     sendDefaultPii: false,
+
+    beforeSend(event) {
+      if (event.request) {
+        delete event.request.data
+        delete event.request.query_string
+
+        if (event.request.headers) {
+          const headers = { ...event.request.headers }
+
+          for (const key of Object.keys(headers)) {
+            const lower = key.toLowerCase()
+
+            if (lower === 'authorization' || lower === 'cookie' || lower === 'set-cookie') {
+              headers[key] = '[Filtered]'
+            }
+          }
+
+          event.request.headers = headers
+        }
+
+        delete event.request.cookies
+      }
+
+      if (event.user) {
+        event.user = event.user.id ? { id: event.user.id } : undefined
+      }
+
+      return event
+    },
   })
 
   console.info(
-    `[bugsink] client error reporting enabled for ${bugsinkEnvironment}; release=${__DPA_RELEASE__}`,
+    `[bugsink] client error reporting enabled for ${bugsinkEnvironment}; release=${__DPA_RELEASE__}`
   )
 } else {
   console.info('[bugsink] client error reporting disabled')
