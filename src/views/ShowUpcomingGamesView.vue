@@ -106,7 +106,7 @@ onMounted(async () => {
       :loading="controller.store.isLoading"
       scrollable
       scrollHeight="70vh"
-      tableStyle="min-width: 100%"
+      tableStyle="min-width: 1500px"
       class="upcoming-games-table"
       rowHover
       dataKey="id"
@@ -119,7 +119,7 @@ onMounted(async () => {
 
       <!-- PrimeVue subheader grouping subtracts one column from its colspan.
            Keep the grouping field as a hidden column so the date header spans
-           all six visible columns, including Status. -->
+           all seven visible columns, including Last Play. -->
       <Column field="dateGroupKey" style="display: none" headerStyle="display: none" bodyStyle="display: none" />
 
       <Column header="Time" style="width: 12%">
@@ -164,13 +164,25 @@ onMounted(async () => {
         </template>
       </Column>
 
-      <Column header="Status" style="width: 54%">
+      <Column header="Status" style="width: 10rem">
         <template #body="{ data }">
           <div class="status-pill" :data-status="data.status">
             <span class="status-main">{{ data.status }}</span>
             <span v-if="data.statusDetail && data.statusDetail !== data.status" class="status-detail">
               {{ data.statusDetail }}
             </span>
+          </div>
+        </template>
+      </Column>
+
+      <Column header="Last Play" headerClass="last-play-column" bodyClass="last-play-column">
+        <template #body="{ data }">
+          <div
+            class="last-play-content"
+            :class="{ 'last-play-empty': !data.scoringSummaryShort }"
+            :title="data.scoringSummaryShort ?? undefined"
+          >
+            {{ data.scoringSummaryShort ?? '—' }}
           </div>
         </template>
       </Column>
@@ -197,8 +209,8 @@ onMounted(async () => {
 }
 
 .upcoming-games-container {
-  width: 60%;
-  max-width: 1200px;
+  width: 94%;
+  max-width: 1800px;
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -330,6 +342,34 @@ onMounted(async () => {
   white-space: nowrap;
 }
 :deep(.at-column .p-column-header-content) { justify-content: center; }
+
+
+:deep(.last-play-column) {
+  min-width: 70ch;
+  width: 90ch;
+  max-width: 120ch;
+}
+
+:deep(.last-play-column .p-column-header-content) {
+  justify-content: flex-start;
+}
+
+.last-play-content {
+  max-height: 4.75rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.045);
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  scrollbar-gutter: stable;
+}
+
+.last-play-empty {
+  color: #9ca3af;
+}
 
 .market-label {
   display: inline-block;
