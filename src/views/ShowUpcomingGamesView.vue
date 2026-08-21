@@ -174,6 +174,7 @@ onMounted(async () => {
           </div>
         </template>
       </Column>
+    </DataTable>
 
       <Column header="Last Play" headerClass="last-play-column" bodyClass="last-play-column">
         <template #body="{ data }">
