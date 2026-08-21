@@ -1,7 +1,6 @@
 // src/composables/schedule/useUpcomingGamesController.ts
 import { ref, computed, watch } from 'vue'
 import { useUpcomingScheduleStore } from '@/stores/schedule/upcomingGamesStore'
-import { getLatestScoringPlayText } from '@/services/schedule/scoringPlayService'
 import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers'
 import { useToast } from 'primevue/usetoast'
 import { JobsApi } from '@/services/api'
@@ -129,14 +128,6 @@ export function useUpcomingGamesController() {
 
       // ✅ Track score changes AFTER fetching new data
       trackScoreChanges()
-
-      // Scoring play checking
-      for (const g of store.games) {
-        if (g.status === 'In Progress') {
-          const lastText = await getLatestScoringPlayText(g)
-          // scoring play logic omitted for brevity
-        }
-      }
 
       // Progress bar for live games
       if (hasLiveGames.value) startProgressTimer()

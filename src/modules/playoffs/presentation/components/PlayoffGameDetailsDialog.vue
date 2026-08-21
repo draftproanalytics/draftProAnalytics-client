@@ -51,6 +51,11 @@ const headerEyebrow = computed(() =>
   details.value?.playoffRound ? 'NFL PLAYOFFS' : 'NFL GAME'
 )
 
+const matchupStatus = computed<string>(() => {
+  const status = details.value?.status?.trim();
+  return status ? status.toUpperCase() : 'STATUS UNAVAILABLE';
+})
+
 const formattedDate = computed(() => {
   if (!details.value?.date) return 'Date unavailable'
   return new Intl.DateTimeFormat('en-US', {
@@ -95,6 +100,11 @@ const load = async (): Promise<void> => {
   error.value = null
   try {
     details.value = await fetchPlayoffGameDetails(props.gameId)
+    console.info('[GameDetails] loaded status', {
+      gameId: props.gameId,
+      status: details.value.status,
+      title: details.value.title,
+    })
   } catch (caught: unknown) {
     details.value = null
     error.value = caught instanceof Error ? caught.message : 'Unable to load game details'
@@ -158,7 +168,7 @@ watch(
             <div class="final-score">{{ details.awayTeam.score ?? '—' }}</div>
           </article>
 
-          <div class="versus">FINAL</div>
+          <div class="versus">{{ matchupStatus }}</div>
 
           <article class="team team--home" :class="{ champion: details.homeTeam.winner }">
             <div class="final-score">{{ details.homeTeam.score ?? '—' }}</div>
