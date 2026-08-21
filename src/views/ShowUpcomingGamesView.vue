@@ -1,24 +1,22 @@
 <!-- src/views/ShowUpcomingGamesView.vue -->
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
-import { useUpcomingGamesController } from '@/composables/schedule/useUpcomingGamesController';
+import { computed, onMounted, ref } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers';
 import PlayoffGameDetailsDialog from '@/modules/playoffs/presentation/components/PlayoffGameDetailsDialog.vue';
-import TeamBadge from '@/components/team/TeamBadge.vue';
+import { useUpcomingGamesController } from '@/composables/schedule/useUpcomingGamesController';
 import { preseasonWeekOptions } from '@/modules/jobs/domain/NflJobLabels';
+import { getViewerLocation } from '@/services/schedule/viewerMarketService';
+import { classifyGameMarket, teamDisplayLabel, type ViewerLocation } from '@/util/schedule/gameMarket';
+import type { UpcomingGameUI } from '@/util/schedule/upcomingGamesHelpers';
 
 const controller = useUpcomingGamesController();
-const { loading, runImportScoresWeek } = controller;
+const { loading } = controller;
 
 const displayedWeekOptions = computed<{ label: string; value: number | null }[]>(() => {
   switch (Number(controller.selectedSeasonType.value)) {
     case 1:
-      return [
-        { label: 'All Preseason', value: null },
-        ...preseasonWeekOptions,
-      ];
+      return [{ label: 'All Preseason', value: null }, ...preseasonWeekOptions];
     case 3:
       return Array.from({ length: 5 }, (_, i) => ({ label: `Postseason Week ${i + 1}`, value: i + 1 }));
     default:
@@ -29,6 +27,7 @@ const displayedWeekOptions = computed<{ label: string; value: number | null }[]>
 const selectedGameId = ref<number | null>(null);
 const gameDetailsVisible = ref(false);
 const selectedGameTitle = ref<string | null>(null);
+const viewerLocation = ref<ViewerLocation | null>(null);
 
 const openGameDetails = (game: UpcomingGameUI): void => {
   selectedGameId.value = game.id;
@@ -36,44 +35,57 @@ const openGameDetails = (game: UpcomingGameUI): void => {
   gameDetailsVisible.value = true;
 };
 
-onMounted(() => {
-  // optional: preload current week here if you want
-  // controller.submitControls();
+const marketFor = (game: UpcomingGameUI): string => classifyGameMarket(game, viewerLocation.value);
+
+const shouldShowScore = (game: UpcomingGameUI): boolean =>
+  game.status.trim().toLowerCase() !== 'scheduled';
+
+const readableTextColor = (background: string): string => {
+  const normalized = background.replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return '#ffffff';
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+  const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+  return luminance > 0.58 ? '#000000' : '#ffffff';
+};
+
+onMounted(async () => {
+  console.info('[UpcomingGames:Market] ShowUpcomingGamesView mounted');
+  try {
+    viewerLocation.value = await getViewerLocation();
+    console.info('[UpcomingGames:Market] active viewer location', viewerLocation.value);
+  } catch (error: unknown) {
+    viewerLocation.value = null;
+    console.warn('[UpcomingGames:Market] Unable to determine viewing market:', error);
+  }
 });
 </script>
 
 <template>
-  <div class="p-4">
+  <div class="p-4 upcoming-games-page">
+    <div class="upcoming-games-container">
     <h2 class="text-2xl font-bold mb-3">Upcoming NFL Games</h2>
 
-    <!-- FILTER CONTROLS -->
     <div class="controls-row">
-      <!-- YEAR -->
       <select v-model="controller.selectedYear.value" class="control-select">
-        <option v-for="y in [2023, 2024, 2025, 2026, 2027]" :key="y" :value="y">
-          {{ y }}
-        </option>
+        <option v-for="y in [2023, 2024, 2025, 2026, 2027]" :key="y" :value="y">{{ y }}</option>
       </select>
 
-      <!-- SEASON TYPE -->
       <select v-model="controller.selectedSeasonType.value" class="control-select">
         <option :value="1">Preseason</option>
         <option :value="2">Regular Season</option>
         <option :value="3">Postseason</option>
       </select>
 
-      <!-- WEEK -->
       <select v-model="controller.selectedWeek.value" class="control-select">
         <option v-for="opt in displayedWeekOptions" :key="opt.value ?? 'all-preseason'" :value="opt.value">
           {{ opt.label }}
         </option>
       </select>
 
-      <div style="margin-right: -2.0em">
-        <button class="submit-btn" @click="controller.submitControls()">
-          Submit
-        </button>
-
+      <div style="margin-right: -2em">
+        <button class="submit-btn" @click="controller.submitControls()">Submit</button>
         <button
           class="refresh-btn"
           :disabled="loading || controller.isAllPreseasonSelected.value"
@@ -87,59 +99,72 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- TABLE -->
     <DataTable
       :value="controller.store.games"
+      rowGroupMode="subheader"
+      groupRowsBy="dateGroupKey"
       :loading="controller.store.isLoading"
+      scrollable
+      scrollHeight="70vh"
       tableStyle="min-width: 100%"
+      class="upcoming-games-table"
       rowHover
       dataKey="id"
       :rowClass="(data) => controller.isRecentlyUpdated(data.id) ? 'score-updated game-details-row' : 'game-details-row'"
       @row-click="openGameDetails($event.data)"
     >
-      <!-- DATE/TIME COLUMN -->
-      <Column header="Date/Time" style="width: 160px">
+      <template #groupheader="{ data }">
+        <div class="game-date-group-header">{{ data.dateGroupLabel }}</div>
+      </template>
+
+      <!-- PrimeVue subheader grouping subtracts one column from its colspan.
+           Keep the grouping field as a hidden column so the date header spans
+           all six visible columns, including Status. -->
+      <Column field="dateGroupKey" style="display: none" headerStyle="display: none" bodyStyle="display: none" />
+
+      <Column header="Time" style="width: 12%">
         <template #body="{ data }">
-          <div class="flex flex-col leading-tight">
-            <span class="date-day">{{ data.dateFormatted.day }}&nbsp;&nbsp;</span>
-            <span class="date-time">{{ data.dateFormatted.time }}</span>
-          </div>
+          <span class="date-time">{{ data.dateFormatted.time }}</span>
         </template>
       </Column>
 
-      <!-- MATCHUP COLUMN -->
-      <Column header="Matchup">
+      <Column header="Away" style="width: 10%" headerClass="away-team-column" bodyClass="away-team-column">
         <template #body="{ data }">
-          <div 
-            :class="['matchup-row', { 'score-highlight': controller.isRecentlyUpdated(data.id) }]"
+          <span
+            class="team-score-badge"
+            :class="{ 'winning-team': data.awayWinner }"
+            :style="{ backgroundColor: data.teamColorAway, color: readableTextColor(data.teamColorAway) }"
+            :title="data.awayTeamName"
           >
-            <!-- AWAY TEAM -->
-            <div class="team-horizontal">
-              <TeamBadge :name="data.awayTeamName" size="lg" />
-              <span :class="['team-name', data.awayWinner ? 'winner-text' : 'loser-text']">
-                {{ data.awayTeamName }}
-                <span class="score" v-if="data.awayScore !== null">({{ data.awayScore }})</span>
-                <span v-if="data.awayWinner" class="winner-check">✔</span>
-              </span>
-            </div>
-
-            <span class="vs">@</span>
-
-            <!-- HOME TEAM -->
-            <div class="team-horizontal">
-              <TeamBadge :name="data.homeTeamName" size="lg" />
-              <span :class="['team-name', data.homeWinner ? 'winner-text' : 'loser-text']">
-                {{ data.homeTeamName }}
-                <span class="score" v-if="data.homeScore !== null">({{ data.homeScore }})</span>
-                <span v-if="data.homeWinner" class="winner-check">✔</span>
-              </span>
-            </div>
-          </div>
+            {{ teamDisplayLabel(data.awayTeamAbbrev, data.awayTeamName) }}<span v-if="shouldShowScore(data) && data.awayScore !== null"> ({{ data.awayScore }})</span>
+          </span>
         </template>
       </Column>
 
-      <!-- STATUS COLUMN -->
-      <Column header="Status" style="width: 140px">
+      <Column header="" style="width: 2%" headerClass="at-column" bodyClass="at-column">
+        <template #body><span class="at-symbol">@</span></template>
+      </Column>
+
+      <Column header="Home" style="width: 10%" headerClass="home-team-column" bodyClass="home-team-column">
+        <template #body="{ data }">
+          <span
+            class="team-score-badge"
+            :class="{ 'winning-team': data.homeWinner }"
+            :style="{ backgroundColor: data.teamColorHome, color: readableTextColor(data.teamColorHome) }"
+            :title="data.homeTeamName"
+          >
+            {{ teamDisplayLabel(data.homeTeamAbbrev, data.homeTeamName) }}<span v-if="shouldShowScore(data) && data.homeScore !== null"> ({{ data.homeScore }})</span>
+          </span>
+        </template>
+      </Column>
+
+      <Column header="Market" style="width: 12%">
+        <template #body="{ data }">
+          <span class="market-label">{{ marketFor(data) }}</span>
+        </template>
+      </Column>
+
+      <Column header="Status" style="width: 54%">
         <template #body="{ data }">
           <div class="status-pill" :data-status="data.status">
             <span class="status-main">{{ data.status }}</span>
@@ -149,20 +174,13 @@ onMounted(() => {
           </div>
         </template>
       </Column>
-
-      <!-- SCORING SUMMARY COLUMN -->
-      <Column header="Scoring">
-        <template #body="{ data }">
-          <div class="scoring-cell">
-            <span v-if="data.scoringSummaryShort">
-              {{ data.scoringSummaryShort }}
-            </span>
-            <span v-else class="no-scoring">—</span>
-          </div>
-        </template>
-      </Column>
-
     </DataTable>
+
+    <div v-if="viewerLocation?.available" class="market-note">
+      Local market inferred from {{ viewerLocation.city ?? 'your area' }}<span v-if="viewerLocation.regionCode">, {{ viewerLocation.regionCode }}</span>.
+    </div>
+
+    </div>
 
     <PlayoffGameDetailsDialog
       v-model:visible="gameDetailsVisible"
@@ -173,9 +191,58 @@ onMounted(() => {
 </template>
 
 <style scoped>
-:deep(.game-details-row) {
-  cursor: pointer;
+.upcoming-games-page {
+  width: 100%;
+  box-sizing: border-box;
 }
+
+.upcoming-games-container {
+  width: 60%;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+:deep(.upcoming-games-table) {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+:deep(.upcoming-games-table .p-datatable-table-container) {
+  border-radius: 0.75rem;
+}
+
+:deep(.upcoming-games-table .p-datatable-thead > tr > th) {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--p-datatable-header-cell-background, #18181b);
+}
+
+:deep(.upcoming-games-table .p-datatable-thead > tr > th:first-child) {
+  border-top-left-radius: 0.75rem;
+}
+
+:deep(.upcoming-games-table .p-datatable-thead > tr > th:last-child) {
+  border-top-right-radius: 0.75rem;
+}
+
+:deep(.upcoming-games-table .p-datatable-tbody > tr:last-child > td:first-child) {
+  border-bottom-left-radius: 0.75rem;
+}
+
+:deep(.upcoming-games-table .p-datatable-tbody > tr:last-child > td:last-child) {
+  border-bottom-right-radius: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .upcoming-games-container {
+    width: 100%;
+  }
+}
+
+:deep(.game-details-row) { cursor: pointer; }
 
 .controls-row {
   display: flex;
@@ -191,120 +258,92 @@ onMounted(() => {
   border: 1px solid #444;
   background-color: #111;
   color: #f5f5f5;
-  width: 25%
+  width: 25%;
 }
 
-.submit-btn,
-.refresh-btn {
+.submit-btn, .refresh-btn {
   padding: 0.4rem 0.9rem;
   border-radius: 0.375rem;
   border: none;
   cursor: pointer;
   font-weight: 500;
 }
+.submit-btn { background-color: #054dbd; color: #fff; }
+.refresh-btn { background-color: #333; color: #eee; }
+.refresh-btn[disabled] { opacity: 0.6; cursor: default; }
 
-.submit-btn {
-  background-color: #054dbd;
-  color: #fff;
-}
-
-.refresh-btn {
-  background-color: #333;
-  color: #eee;
-}
-
-.refresh-btn[disabled] {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* Score highlight on matchup row */
-.score-highlight {
-  animation: scoreFlash 3s ease-in-out;
-  background-color: rgba(255, 215, 0, 0.3);
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-}
-
+.score-highlight { animation: scoreFlash 3s ease-in-out; }
 @keyframes scoreFlash {
-  0% {
-    background-color: rgba(255, 215, 0, 0.4);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
-  }
-  50% {
-    background-color: rgba(255, 215, 0, 0.3);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-  }
-  100% {
-    background-color: rgba(255, 215, 0, 0);
-    box-shadow: none;
-  }
+  0% { background-color: rgba(255, 215, 0, 0.4); box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+  50% { background-color: rgba(255, 215, 0, 0.3); box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+  100% { background-color: rgba(255, 215, 0, 0); box-shadow: none; }
+}
+:deep(.score-updated) { animation: scoreFlash 3s ease-in-out; background-color: rgba(255, 215, 0, 0.2) !important; }
+
+.game-date-group-header {
+  width: 100%;
+  padding: 0.65rem 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+:deep(.p-datatable-row-group-header > td) {
+  background: rgba(255, 255, 255, 0.07);
+  border-top: 2px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* Also keep row-level highlight in case it works */
-:deep(.score-updated) {
-  animation: scoreFlash 3s ease-in-out;
-  background-color: rgba(255, 215, 0, 0.2) !important;
-}
+.date-time { font-size: 0.9rem; color: #ddd; white-space: nowrap; }
 
-/* Date/time */
-.date-day {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-.date-time {
-  font-size: 0.85rem;
-  color: #ccc;
-}
-
-/* Matchup */
-.matchup-row {
-  display: flex;
-  flex-direction: row;
+.team-score-badge {
+  display: inline-flex;
+  min-width: 92px;
+  justify-content: center;
   align-items: center;
-  gap: 1.25rem;
-}
-
-.team-horizontal {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.team-logo {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  object-position: center;
-}
-
-.team-name {
-  font-weight: 500;
+  padding: 0.48rem 0.8rem;
+  border-radius: 0.4rem;
   font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.winning-team { font-weight: 800; box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.5); }
+.at-symbol { display: block; text-align: center; font-size: 1.05rem; font-weight: 700; color: #ccc; }
+:deep(.away-team-column) {
+  text-align: right !important;
+  padding-left: 0.25rem !important;
+  padding-right: 0.4em !important;
+}
+:deep(.away-team-column .p-column-header-content) { justify-content: flex-end; }
+:deep(.home-team-column) {
+  text-align: left !important;
+  padding-left: 0.4em !important;
+  padding-right: 0.25rem !important;
+}
+:deep(.home-team-column .p-column-header-content) { justify-content: flex-start; }
+:deep(.at-column) {
+  width: 1%;
+  text-align: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
   white-space: nowrap;
 }
+:deep(.at-column .p-column-header-content) { justify-content: center; }
 
-.vs {
-  font-weight: 600;
-  color: #ddd;
-  padding: 0 0.5rem;
+.market-label {
+  display: inline-block;
+  min-width: 92px;
+  padding: 0.32rem 0.55rem;
+  border-radius: 0.3rem;
+  background: #fff;
+  color: #000;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.045em;
 }
 
-.winner-check {
-  color: #00e600;
-  margin-left: 4px;
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-.score {
-  font-size: larger;
-  color: yellow;
-}
-
-/* Status pill */
 .status-pill {
   display: inline-flex;
   flex-direction: column;
@@ -313,57 +352,10 @@ onMounted(() => {
   background-color: #222;
   font-size: 0.8rem;
 }
-
-.status-pill[data-status='In Progress'] {
-  background-color: #14532d;
-}
-
-.status-pill[data-status='Final'] {
-  background-color: #1f2937;
-}
-
-.status-pill[data-status='Postponed'] {
-  background-color: #7f1d1d;
-}
-
-.status-main {
-  font-weight: 600;
-  color: #f9fafb;
-}
-
-.status-detail {
-  font-size: 0.75rem;
-  color: #e5e7eb;
-}
-
-/* Scoring cell + expansion */
-.scoring-cell {
-  font-size: 0.85rem;
-  line-height: 1.2;
-  max-height: 3.4rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.no-scoring {
-  color: #777;
-  font-style: italic;
-}
-
-.scoring-expansion {
-  padding: 0.75rem 1rem;
-  background-color: rgba(0, 0, 0, 0.35);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.scoring-header {
-  margin: 0 0 0.5rem;
-  font-weight: 600;
-}
-
-.scoring-list {
-  margin: 0;
-  padding-left: 1.25rem;
-  font-size: 0.85rem;
-}
+.status-pill[data-status='In Progress'] { background-color: #14532d; }
+.status-pill[data-status='Final'] { background-color: #1f2937; }
+.status-pill[data-status='Postponed'] { background-color: #7f1d1d; }
+.status-main { font-weight: 600; color: #f9fafb; }
+.status-detail { font-size: 0.75rem; color: #e5e7eb; }
+.market-note { margin-top: 0.65rem; font-size: 0.76rem; color: #9ca3af; }
 </style>

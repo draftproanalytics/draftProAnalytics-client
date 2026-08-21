@@ -6,7 +6,7 @@
 
 import { DateTime } from 'luxon';
 import { resolveTeamLogo } from '@/util/resolveTeamLogo';
-import { getTeamLogoInfo } from '@/util/teamLogo'
+import { resolveTeamBadge } from '@/domain/team/teamBadge'
 import type {
   NormalizedGameDTO,
   ScoringPlayDTO,
@@ -21,6 +21,8 @@ export interface UpcomingGameDto {
     day: string;
     time: string;
   };
+  dateGroupKey: string;
+  dateGroupLabel: string;
 
   homeTeamName: string;
   awayTeamName: string;
@@ -28,6 +30,10 @@ export interface UpcomingGameDto {
   awayLogo: string;
   homeScore: number | null;
   awayScore: number | null;
+  homeWinner: boolean;
+  awayWinner: boolean;
+  homeTeamAbbrev: string;
+  awayTeamAbbrev: string;
 
   status: 'Scheduled' | 'In Progress' | 'Final' | 'Postponed';
   statusDetail: string;
@@ -48,19 +54,35 @@ export type UpcomingGameUI = UpcomingGameDto;
 // -----------------------------------------------------
 // Helpers
 // -----------------------------------------------------
-function toDateFormatted(dateIso: string | null): { day: string; time: string } {
+function toDateDisplay(dateIso: string | null): {
+  formatted: { day: string; time: string };
+  groupKey: string;
+  groupLabel: string;
+} {
   if (!dateIso) {
-    return { day: '', time: '' };
+    return {
+      formatted: { day: '', time: '' },
+      groupKey: 'date-unavailable',
+      groupLabel: 'Date unavailable',
+    };
   }
 
   const dt = DateTime.fromISO(dateIso);
   if (!dt.isValid) {
-    return { day: '', time: '' };
+    return {
+      formatted: { day: '', time: '' },
+      groupKey: 'date-unavailable',
+      groupLabel: 'Date unavailable',
+    };
   }
 
   return {
-    day: dt.toFormat('ccc L/d'), // e.g. "Sun 11/30"
-    time: dt.toFormat('h:mm a'), // e.g. "7:15 PM"
+    formatted: {
+      day: dt.toFormat('ccc L/d'), // e.g. "Sun 11/30"
+      time: dt.toFormat('h:mm a'), // e.g. "7:15 PM"
+    },
+    groupKey: dt.toISODate() ?? 'date-unavailable',
+    groupLabel: dt.toFormat('cccc, LLLL d'), // e.g. "Thursday, August 20"
   };
 }
 
@@ -100,13 +122,23 @@ function mapScoringPlaysToDetails(plays: ScoringPlayDTO[] | undefined): string[]
 // MAIN MAPPER: server DTO → UI model
 // -----------------------------------------------------
 export function mapUpcomingGamesToUI(events: NormalizedGameDTO[]): UpcomingGameUI[] {
-  return events.map((e) => {
-    const dateFormatted = e.dateFormatted ?? toDateFormatted(e.date);
+  const chronologicalEvents = [...events].sort((a, b) => {
+    const aTime = a.date ? DateTime.fromISO(a.date).toMillis() : Number.MAX_SAFE_INTEGER;
+    const bTime = b.date ? DateTime.fromISO(b.date).toMillis() : Number.MAX_SAFE_INTEGER;
+    return aTime - bTime;
+  });
+
+  return chronologicalEvents.map((e) => {
+    const dateDisplay = toDateDisplay(e.date);
+    const dateFormatted = e.dateFormatted ?? dateDisplay.formatted;
 
     const homeLogo =
       e.homeLogoLocal || e.homeLogoEspn || resolveTeamLogo(e.homeTeamName);
     const awayLogo =
       e.awayLogoLocal || e.awayLogoEspn || resolveTeamLogo(e.awayTeamName);
+
+    const homeBadge = resolveTeamBadge(e.homeTeamName);
+    const awayBadge = resolveTeamBadge(e.awayTeamName);
 
     const scoringDetails = mapScoringPlaysToDetails(e.scoringPlays);
     const scoringSummaryShort =
@@ -116,6 +148,8 @@ export function mapUpcomingGamesToUI(events: NormalizedGameDTO[]): UpcomingGameU
     const dto: UpcomingGameDto = {
       id: e.id,
       dateFormatted,
+      dateGroupKey: dateDisplay.groupKey,
+      dateGroupLabel: dateDisplay.groupLabel,
 
       homeTeamName: e.homeTeamName,
       awayTeamName: e.awayTeamName,
@@ -123,6 +157,10 @@ export function mapUpcomingGamesToUI(events: NormalizedGameDTO[]): UpcomingGameU
       awayLogo,
       homeScore: e.homeScore,
       awayScore: e.awayScore,
+      homeWinner: e.homeWinner,
+      awayWinner: e.awayWinner,
+      homeTeamAbbrev: homeBadge?.abbreviation ?? e.homeTeamName,
+      awayTeamAbbrev: awayBadge?.abbreviation ?? e.awayTeamName,
 
       status: e.status,
       statusDetail: e.statusDetail,
@@ -130,8 +168,8 @@ export function mapUpcomingGamesToUI(events: NormalizedGameDTO[]): UpcomingGameU
       isPrimetime: e.isPrimetime,
       primetimeType: e.primetimeType,
 
-      teamColorHome: e.teamColorHome,
-      teamColorAway: e.teamColorAway,
+      teamColorHome: homeBadge?.primaryColor ?? e.teamColorHome ?? '#444444',
+      teamColorAway: awayBadge?.primaryColor ?? e.teamColorAway ?? '#444444',
 
       scoringSummaryShort,
       scoringDetails,
